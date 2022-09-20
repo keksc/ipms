@@ -183,14 +183,17 @@ void MainFrame::OnImportContact(wxCommandEvent& event)
 //wxString nomfichier = wxFileSelector("Enregistrer", cwd.string() + "/Contacts/",m_prenomNouveauContact->GetValue() + m_nomNouveauContact->GetValue() ,"", "cpp files (*.cpp;*.h)|*.h;*.cpp|resources files (*.rc)|*.rc", wxFD_SAVE);
 }
 
-void MainFrame::OnSend()
+void MainFrame::OnEnvoi(wxCommandEvent& event)
 {
-    wxTcpSocket
+    wxTcpSocket socket();
+    wxIPV4address ip();
+    ip.service(PORT);
+    
 }
 
-void MainFrame::OnReceive()
+void MainFrame::OnMessageRecu(wxCommandEvent& event)
 {
-    
+    wxTcpListener listener();
 }
 
 void MainFrame::OnAbout(wxCommandEvent& event)
