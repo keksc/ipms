@@ -186,7 +186,7 @@ void MainFrame::OnImportContact(wxCommandEvent& event)
 void MainFrame::OnEnvoi(wxCommandEvent& event)
 {
     wxTcpServer server();
-    server.create("ipms server");
+    server.Create(wxString("ipms server"));
     wxIPV4address ip();
     ip.Service(PORT);
     
