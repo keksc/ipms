@@ -14,7 +14,7 @@
 
 #include "Main.h"
 
-#inlude "settings.h"
+#include "settings.h"
 
 
 
