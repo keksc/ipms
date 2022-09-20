@@ -8,10 +8,12 @@
 #include <wx/fileconf.h>
 #include <wx/regex.h>
 #include <wx/log.h>
+#include <wx/socket.h>
 #include <filesystem>
 #include <map>
 
 #include "Main.h"
+
 #inlude "settings.h"
 
 
@@ -179,6 +181,16 @@ void MainFrame::OnImportContact(wxCommandEvent& event)
 
 
 //wxString nomfichier = wxFileSelector("Enregistrer", cwd.string() + "/Contacts/",m_prenomNouveauContact->GetValue() + m_nomNouveauContact->GetValue() ,"", "cpp files (*.cpp;*.h)|*.h;*.cpp|resources files (*.rc)|*.rc", wxFD_SAVE);
+}
+
+void MainFrame::OnSend()
+{
+    wxTcpSocket
+}
+
+void MainFrame::OnReceive()
+{
+    
 }
 
 void MainFrame::OnAbout(wxCommandEvent& event)
