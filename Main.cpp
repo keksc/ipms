@@ -196,7 +196,7 @@ void MainFrame::OnMessageRecu(wxCommandEvent& event)
     wxTcpClient client();
 
 
-    client.MakeConnection()
+    client.MakeConnection("", "ipms client", "message")//TODO: ajouter un chargemnt d'ip à partir des contacts et avec selection
 }
 
 void MainFrame::OnAbout(wxCommandEvent& event)
