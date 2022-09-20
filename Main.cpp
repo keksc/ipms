@@ -185,15 +185,16 @@ void MainFrame::OnImportContact(wxCommandEvent& event)
 
 void MainFrame::OnEnvoi(wxCommandEvent& event)
 {
-    wxTcpSocket socket();
+    wxTcpServer server();
+    server.create("ipms server");
     wxIPV4address ip();
-    ip.service(PORT);
+    ip.Service(PORT);
     
 }
 
 void MainFrame::OnMessageRecu(wxCommandEvent& event)
 {
-    wxTcpListener listener();
+    wxTcpClient listener();
 }
 
 void MainFrame::OnAbout(wxCommandEvent& event)
