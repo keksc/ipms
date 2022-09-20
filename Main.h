@@ -16,6 +16,8 @@ private:
     void OnAbout(wxCommandEvent& event);
     void OnNouveauContactEntrer(wxCommandEvent& event);
     void OnImportContact(wxCommandEvent& event);
+    void OnEnvoi(wxCommandEvent& event);
+    void OnMessageRecu(wxCommandEvent& event);
 
     wxMenu *m_menuFile;
     wxMenu *m_menuContact;
