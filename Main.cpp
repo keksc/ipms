@@ -8,7 +8,7 @@
 #include <wx/fileconf.h>
 #include <wx/regex.h>
 #include <wx/log.h>
-#include <wx/socket.h>
+#include <wx/sckipc.h>
 #include <filesystem>
 #include <map>
 
@@ -187,14 +187,16 @@ void MainFrame::OnEnvoi(wxCommandEvent& event)
 {
     wxTcpServer server();
     server.Create(wxString("ipms server"));
-    wxIPV4address ip();
-    ip.Service(PORT);
-    
+
+
 }
 
 void MainFrame::OnMessageRecu(wxCommandEvent& event)
 {
-    wxTcpClient listener();
+    wxTcpClient client();
+
+
+    client.MakeConnection()
 }
 
 void MainFrame::OnAbout(wxCommandEvent& event)
