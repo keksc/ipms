@@ -28,7 +28,7 @@ enum IDs
 };
 
 MainFrame::MainFrame()
-    : wxFrame(NULL, IDs::Fenetre, "mms", wxPoint(-1, -1), wxSize(WINDOW_WIDTH, WINDOW_HEIGHT))
+    : wxFrame(NULL, IDs::Fenetre, WINDOW_NAME, wxPoint(-1, -1), wxSize(WINDOW_WIDTH, WINDOW_HEIGHT))
 {
 
     //wxLogNull no_log; pour supprimer les logs localement, jusqu'à la fin du bloc
