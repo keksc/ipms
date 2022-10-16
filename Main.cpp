@@ -8,7 +8,10 @@
 #include <wx/fileconf.h>
 #include <wx/regex.h>
 #include <wx/log.h>
+#include <wx/socket.h>
 #include <wx/sckipc.h>
+#include <wx/dir.h>
+
 #include <filesystem>
 #include <map>
 
@@ -28,7 +31,7 @@ enum IDs
 };
 
 MainFrame::MainFrame()
-    : wxFrame(NULL, IDs::Fenetre, WINDOW_NAME, wxPoint(-1, -1), wxSize(WINDOW_WIDTH, WINDOW_HEIGHT))
+    : wxFrame(NULL, IDs::Fenetre, "mms", wxPoint(-1, -1), wxSize(WINDOW_WIDTH, WINDOW_HEIGHT))
 {
 
     //wxLogNull no_log; pour supprimer les logs localement, jusqu'à la fin du bloc
@@ -87,6 +90,8 @@ MainFrame::MainFrame()
     Bind(wxEVT_MENU, &MainFrame::OnExit, this, wxID_EXIT);
     Bind(wxEVT_MENU, &MainFrame::OnAbout, this, wxID_ABOUT);
     Bind(wxEVT_BUTTON, &MainFrame::OnNouveauContactEntrer, this, IDs::BtnEntrerNouveauContact);
+
+    AfficherMenuPrincipal();
 }
 
 void MainFrame::OnNouveauContact(wxCommandEvent& event)
@@ -119,6 +124,17 @@ void MainFrame::OnNouveauContact(wxCommandEvent& event)
 
         printed_menuNouveauContact = true;
     }
+}
+
+void MainFrame::AfficherMenuPrincipal()
+{
+    wxString dir_root = wxString(std::filesystem::current_path().string()) + wxString("/Contacts/");
+    wxArrayString files_result;
+    wxDir::GetAllFiles(dir_root,&files_result,wxT("*.ctc"));
+    for(size_t i=0;i<files_result.GetCount();++i){
+        wxPuts(files_result[i]);
+    }
+    m_sizerMenuPrincipal = new wxGridSizer(1,1,1,1);
 }
 
 void MainFrame::OnNouveauContactEntrer(wxCommandEvent& event)
@@ -185,23 +201,19 @@ void MainFrame::OnImportContact(wxCommandEvent& event)
 
 void MainFrame::OnEnvoi(wxCommandEvent& event)
 {
-    wxTcpServer server();
-    server.Create(wxString("ipms server"));
-
-
+    //wxTCPServer server();
+    //server.Create(wxString("ipms server"));
 }
 
 void MainFrame::OnMessageRecu(wxCommandEvent& event)
 {
-    wxTcpClient client();
-
-
-    client.MakeConnection("", "ipms client", "message")//TODO: ajouter un chargemnt d'ip à partir des contacts et avec selection
+    //m_sock = new wxSocketClient();
+//TODO: ajouter un chargemnt d'ip à partir des contacts
 }
 
 void MainFrame::OnAbout(wxCommandEvent& event)
 {
-    wxMessageBox("mms 1.0", "A propos de mms", wxOK | wxICON_INFORMATION);
+    wxMessageBox("ipms 1.0", L"À propos de mms", wxOK | wxICON_INFORMATION);
 }
 
 void MainFrame::OnExit(wxCommandEvent& event)
