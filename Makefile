@@ -11,7 +11,7 @@ OBJS = $(SRCS:.cpp=.o)
 DBGDIR = debug
 DBGEXE = $(DBGDIR)/$(EXE)
 DBGOBJS = $(addprefix $(DBGDIR)/, $(OBJS))
-DBGCFLAGS = -g -O0 -DDEBUG -Wall
+DBGCFLAGS = -g -O0 -DDEBUG -Wall -Werror#warnings => erreurs
 
 #
 # Release build settings
@@ -19,7 +19,7 @@ DBGCFLAGS = -g -O0 -DDEBUG -Wall
 RELDIR = release
 RELEXE = $(RELDIR)/$(EXE)
 RELOBJS = $(addprefix $(RELDIR)/, $(OBJS))
-RELCFLAGS = -O3 -DNDEBUG -Wall
+RELCFLAGS = -O3 -DNDEBUG -Wall -Werror#warnings => erreurs
 
 .PHONY: all clean debug prep release remake
 
