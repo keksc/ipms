@@ -3,10 +3,9 @@
 
 #include <wx/wx.h>
 #include <wx/file.h>
-#include <map>
+#include <wx/socket.h>
 
-class MainFrame : public wxFrame
-{
+class MainFrame : public wxFrame {
 public:
     MainFrame();
 
@@ -16,8 +15,9 @@ private:
     void OnAbout(wxCommandEvent& event);
     void OnNouveauContactEntrer(wxCommandEvent& event);
     void OnImportContact(wxCommandEvent& event);
-    void OnEnvoi(wxCommandEvent& event);
-    void OnMessageRecu(wxCommandEvent& event);
+    void AfficherMenuPrincipal(wxCommandEvent& event);
+    void AfficherMenuPrincipal();
+    void VerifierMessageRecu();
 
     wxMenu *m_menuFile;
     wxMenu *m_menuContact;
@@ -30,9 +30,13 @@ private:
     wxTextCtrl *m_prenomNouveauContact;
     wxTextCtrl *m_IPNouveauContact;
 
-    bool printed_menuNouveauContact;
+    wxGridSizer *m_sizerMenuPrincipal;
+    wxStaticText *m_infoNoCtc;
 
-    std::map<wxString, wxString> config;
+    wxSocketClient *m_sock;
+
+    bool printed_menuNouveauContact = false;
+    bool infoNoCtcAffiche = false;
 };
 
 #endif // MAIN_H_INCLUDED
