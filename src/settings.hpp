@@ -1,8 +1,8 @@
-#ifndef SETTINGS_H_INCLUDED
-#define SETTINGS_H_INCLUDED
+#ifndef SETTINGS_HPP_INCLUDED
+#define SETTINGS_HPP_INCLUDED
 
-#define WINDOW_WIDTH 300
-#define WINDOW_HEIGHT 250
+#define WINDOW_WIDTH 400
+#define WINDOW_HEIGHT 350
 #define WINDOW_NAME "ipms 1.0"
 #define PORT 6529
 
@@ -11,6 +11,13 @@ enum IDs {
     NouveauContact = 2,
     ImportContact = 3,
     BtnEntrerNouveauContact = 4,
-    ListeContacts = 5
+    ListeContacts = 5,
+    ButConn = 6,
+    ClientDesc = 7,
+    Socket = 8,
+    Server = 9,
+    ButStart = 10,
+    SrvSock = 11,
+    SrvDesc = 12
 };
-#endif // SETTINGS_H_INCLUDED
+#endif // SETTINGS_HPP_INCLUDED

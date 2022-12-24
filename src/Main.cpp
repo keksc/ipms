@@ -8,12 +8,9 @@
 #endif
 
 #include <wx/file.h>
-#include <wx/fileconf.h>
 #include <wx/filename.h>
 #include <wx/regex.h>
-#include <wx/log.h>
 #include <wx/dir.h>
-#include <wx/sckipc.h>
 #include <wx/stdpaths.h>
 
 #include <filesystem>
@@ -27,23 +24,6 @@ MainFrame::MainFrame()
     : wxFrame(NULL, IDs::Fenetre, "ipms", wxPoint(-1, -1), wxSize(WINDOW_WIDTH, WINDOW_HEIGHT)) {
 
     //wxLogNull no_log; pour supprimer les logs localement, jusqu'à la fin du bloc
-    /*wxString nomFichierConfig = wxString(std::filesystem::current_path().string()) + wxString("/config.ini");
-    if(!wxFile::Exists(nomFichierConfig)) {
-        wxFile creerFichierConfig;
-        if(!creerFichierConfig.Create(nomFichierConfig, false, wxS_IRUSR | wxS_IWUSR | wxS_IRGRP | wxS_IWGRP | wxS_IROTH | wxS_IWOTH)) {
-            wxPuts("erreur durant l ecriture du fichier");
-            wxMessageBox(L"erreur durant la création du fichier de configuration");
-        } else {
-            //creerFichierConfig.Write("[Contacts]\nDossier=/home/pboursin/Bureau/ipms/debug/Contacts/");
-        }
-    }
-    wxFileConfig fichierConfig("ipms", "pb", "config.ini", wxEmptyString, wxCONFIG_USE_LOCAL_FILE);
-
-    fichierConfig.SetPath(wxT("Contact"));
-    fichierConfig.Write(wxT("Server"), "ee");
-    fichierConfig.Write(wxT("Database"), "ff");
-    //delete file;
-    config["dossierContacts"] = wxString("");*/
 
     SetIcon(wxIcon("res/icon.ico"));
     m_menuFile = new wxMenu;
@@ -56,6 +36,10 @@ MainFrame::MainFrame()
     m_menuContact->Append(IDs::NouveauContact, "Ajouter\tCtrl-A");
     m_menuContact->Append(IDs::ImportContact, "Importer\tCtrl-I");
 
+    m_menuSocket = new wxMenu;
+    m_menuSocket->Append(IDs::ButConn, "Connecter");
+    m_menuSocket->Append(IDs::ButStart, "Demarrer srv");
+
     m_menuFile->AppendSubMenu(m_menuContact, "Contact");
     m_menuFile->AppendSeparator();
     m_menuFile->Append(wxID_EXIT, "Quitter\tCtrl-Q", "Quitter ce programme");
@@ -66,6 +50,7 @@ MainFrame::MainFrame()
     m_menuBar = new wxMenuBar;
     m_menuBar->Append(m_menuFile, "&Fichier");
     m_menuBar->Append(m_menuHelp, "&Aide");
+    m_menuBar->Append(m_menuSocket, "&Socket");
 
     SetMenuBar(m_menuBar);
     CreateStatusBar();
@@ -77,10 +62,16 @@ MainFrame::MainFrame()
     Bind(wxEVT_MENU, &MainFrame::OnImportContact, this, IDs::ImportContact);
     Bind(wxEVT_MENU, &MainFrame::OnExit, this, wxID_EXIT);
     Bind(wxEVT_MENU, &MainFrame::OnAbout, this, wxID_ABOUT);
-    //Bind(wxEVT_BUTTON, &MainFrame::OnNouveauContactEntrer, this, IDs::BtnEntrerNouveauContact);
+    //socket stuff
+    Bind(wxEVT_MENU, &MainFrame::Connect, this, IDs::ButConn);
+    Bind(wxEVT_SOCKET, &MainFrame::OnSocketEvent, this, IDs::Socket);
+    Bind(wxEVT_MENU, &MainFrame::SrvStart, this, IDs::ButStart);
+    Bind(wxEVT_SOCKET, &MainFrame::OnServerEvent, this, IDs::Server);
+    Bind(wxEVT_SOCKET, &MainFrame::OnSocketEvent, this, IDs::SrvSock);
+
     AfficherMenuPrincipal();
 }
-void MainFrame::AfficherMenuPrincipal(wxCommandEvent& event) {
+void MainFrame::AfficherMenuPrincipal(wxCommandEvent& WXUNUSED(event)) {
     AfficherMenuPrincipal();
 }
 void MainFrame::AfficherMenuPrincipal() {
@@ -93,8 +84,7 @@ void MainFrame::AfficherMenuPrincipal() {
     //std::vector<wxButton> *buttons;
     if(files_result.GetCount() < 1) {
         m_sizerMenuPrincipal = new wxGridSizer(1, 1, 1, 1);
-        m_infoNoCtc = new wxStaticText(this, -1, "", wxDefaultPosition, wxDefaultSize, wxALIGN_CENTRE_HORIZONTAL);
-        m_infoNoCtc->SetLabel(L"Aucun contact pour l'instant, pour en ajouter allez dans Fichier>Contact>Ajouter ou pressez Ctrl+A");
+        m_infoNoCtc = new wxStaticText(this, -1, L"Aucun contact pour l'instant, pour en ajouter allez dans\nFichier>Contact>Ajouter ou pressez Ctrl+A", wxDefaultPosition, wxDefaultSize);
         Unbind(wxEVT_MENU, &MainFrame::AfficherMenuPrincipal, this, IDs::ListeContacts);
         m_sizerMenuPrincipal->Add(m_infoNoCtc);
     } else {
@@ -174,8 +164,3 @@ void MainFrame::OnAbout(wxCommandEvent& event) {
 void MainFrame::OnExit(wxCommandEvent& event) {
     Close(true);
 }
-
-void MainFrame::VerifierMessageRecu() {
-    wxTCPServer server;
-    server.Create("4867");
-}//it will be non-void to return to a loop true if a message has been received and false otherwise

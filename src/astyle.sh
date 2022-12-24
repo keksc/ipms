@@ -5,6 +5,7 @@ astyle App.cpp -A2
 astyle App.hpp -A2
 astyle NouveauContact.cpp -A2
 astyle NouveauContact.hpp -A2
+astyle Sockets.cpp -A2
 
 rm Main.cpp.orig
 rm Main.hpp.orig
@@ -12,3 +13,4 @@ rm App.cpp.orig
 rm App.hpp.orig
 rm NouveauContact.cpp.orig
 rm NouveauContact.hpp.orig
+rm Sockets.cpp.orig

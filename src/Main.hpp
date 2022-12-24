@@ -1,5 +1,5 @@
-#ifndef MAIN_H_INCLUDED
-#define MAIN_H_INCLUDED
+#ifndef MAIN_HPP_INCLUDED
+#define MAIN_HPP_INCLUDED
 
 #include <wx/wx.h>
 #include <wx/file.h>
@@ -18,17 +18,23 @@ private:
     void OnImportContact(wxCommandEvent& event);
     void AfficherMenuPrincipal(wxCommandEvent& event);
     void AfficherMenuPrincipal();
-    void VerifierMessageRecu();
+
+    void Connect(wxCommandEvent& event);
+    void OnSocketEvent(wxSocketEvent &event);
+    void SrvStart(wxCommandEvent& event);
+    void OnServerEvent(wxSocketEvent &event);
 
     wxMenu *m_menuFile;
     wxMenu *m_menuContact;
     wxMenu *m_menuHelp;
     wxMenuBar *m_menuBar;
 
+    wxMenu *m_menuSocket;
+
     wxGridSizer *m_sizerMenuPrincipal;
     wxStaticText *m_infoNoCtc;
 
-    wxSocketClient *m_sock;
+    wxSocketServer *m_server;
 };
 
-#endif // MAIN_H_INCLUDED
+#endif // MAIN_HPP_INCLUDED
