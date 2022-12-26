@@ -4,21 +4,21 @@
 #define WINDOW_WIDTH 400
 #define WINDOW_HEIGHT 350
 #define WINDOW_NAME "ipms 1.0"
+#define DISCUSSION_WIDTH 300
+#define DISCUSSION_HEIGHT 250
 #define PORT 6529
 
 enum IDs {
-    Fenetre = 1,
-    NouveauContact = 2,
-    ImportContact = 3,
-    BtnEntrerNouveauContact = 4,
-    ListeContacts = 5,
-    ButConn = 6,
-    ClientDesc = 7,
-    Socket = 8,
-    Server = 9,
-    ButStart = 10,
-    SrvSock = 11,
-    SrvDesc = 12,
-    ListBox = 13
+    NouveauContact = 1,
+    ImportContact = 2,
+    ListeContacts = 4,
+    ButConn = 5,
+    ClientDesc = 6,
+    Socket = 7,
+    Server = 8,
+    ButStart = 9,
+    SrvSock = 10,
+    SrvDesc = 11,
+    ListBox = 12,
 };
 #endif // SETTINGS_HPP_INCLUDED

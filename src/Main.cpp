@@ -1,6 +1,3 @@
-//TODO: ajouter un contrôle de la validité des addresses IP à la lecture du dossier dans AfficherMenuPrincipal
-//TODO: fix bug quand je lance 2 fois fonction OnNouveauContact l'app se ferme
-
 #include <wx/wxprec.h>
 
 #ifndef WX_PRECOMP
@@ -15,11 +12,12 @@
 
 #include "Main.hpp"
 #include "NouveauContact.hpp"
+#include "Discussion.hpp"
 
 #include "settings.hpp"
 
 MainFrame::MainFrame()
-    : wxFrame(NULL, IDs::Fenetre, "ipms", wxPoint(-1, -1), wxSize(WINDOW_WIDTH, WINDOW_HEIGHT)), m_printedListBox(false) {
+    : wxFrame(NULL, wxID_ANY, WINDOW_NAME, wxDefaultPosition, wxSize(WINDOW_WIDTH, WINDOW_HEIGHT)), m_printedListBox(false) {
 
     //wxLogNull no_log; pour supprimer les logs localement, jusqu'à la fin du bloc
 
@@ -54,7 +52,7 @@ MainFrame::MainFrame()
     Bind(wxEVT_MENU, &MainFrame::AfficherMenuPrincipal, this, IDs::ListeContacts);
     Bind(wxEVT_MENU, &MainFrame::OnNouveauContact, this, IDs::NouveauContact);
     Bind(wxEVT_MENU, &MainFrame::OnImportContact, this, IDs::ImportContact);
-    Bind(wxEVT_MENU, &MainFrame::OnExit, this, wxID_EXIT);
+    Bind(wxEVT_CLOSE_WINDOW, &MainFrame::OnClose, this);
     Bind(wxEVT_MENU, &MainFrame::OnAbout, this, wxID_ABOUT);
     //socket stuff
     Bind(wxEVT_MENU, &MainFrame::Connect, this, IDs::ButConn);
@@ -160,26 +158,52 @@ void MainFrame::OnAbout(wxCommandEvent& event) {
     wxMessageBox("ipms 1.0", L"À propos d'ipms", wxOK | wxICON_INFORMATION);
 }
 
-void MainFrame::OnExit(wxCommandEvent& event) {
-    Close(true);
+void MainFrame::OnClose(wxCloseEvent& event) {
+    for (auto& frame : discFrames)
+    {
+        frame->Close(true);
+    }
+    wxPuts("closed main frame");
+    Destroy();
 }
 
 void MainFrame::CreateConfFolders() {
     wxStandardPathsBase &pathinfo=wxStandardPaths::Get();
     if(!wxDirExists(pathinfo.GetUserDataDir())) {
         wxPuts(wxString(L"Dossier de configuration inexistant. Creation à ") + pathinfo.GetUserDataDir());
-        wxMkDir(pathinfo.GetUserDataDir(), 0777);
+        wxMkDir(pathinfo.GetUserDataDir(), 777);
     }
     if(!wxDirExists(pathinfo.GetUserDataDir() + "/Contacts/")) {
         wxPuts(wxString(L"Dossier de contacts dans le dossier de configuration inexistant. Creation à ") + pathinfo.GetUserDataDir());
-        wxMkDir(pathinfo.GetUserDataDir() + "/Contacts/", 0777);
+        wxMkDir(pathinfo.GetUserDataDir() + "/Contacts/", 777);
     }
 }
 
 void MainFrame::OnListBoxEvent(wxCommandEvent& event) {
-    int index = event.GetSelection();
-    wxString filename = m_listBox->GetString(index);
-    wxMessageBox("You clicked on file " + filename);
+    wxString name = m_listBox->GetStringSelection();
+    discFrames.push_back(new DiscussionFrame(name));
+    // Get the selected file name
+    wxString fileName = m_listBox->GetStringSelection();
+
+    // Check if a frame already exists for the selected file name
+    DiscussionFrame* frame = nullptr;
+    for (auto& f : discFrames) {
+        if (f->GetTitle() == fileName) {
+            frame = f;
+            break;
+        }
+    }
+
+    // If a frame does not exist, create one
+    if (!frame) {
+        frame = new DiscussionFrame(m_listBox->GetStringSelection());
+        discFrames.push_back(frame);
+    } else {
+        frame->SetFocus();
+    }
+
+    // Show the frame
+    frame->Show(true);
 }
 
 wxArrayInt MainFrame::GetWinSize() {
@@ -194,4 +218,4 @@ wxArrayInt MainFrame::GetWinSize() {
 
 void MainFrame::OnResize(wxSizeEvent& event) {
     m_listBox->SetSize(GetWinSize()[0], GetWinSize()[1]);
-} 
+}

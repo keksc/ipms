@@ -6,6 +6,7 @@
 #include <wx/socket.h>
 
 #include "NouveauContact.hpp"
+#include "Discussion.hpp"
 
 class MainFrame : public wxFrame {
 public:
@@ -13,7 +14,7 @@ public:
 
 private:
     void OnNouveauContact(wxCommandEvent& event);
-    void OnExit(wxCommandEvent& event);
+    void OnClose(wxCloseEvent& event);
     void OnAbout(wxCommandEvent& event);
     void OnImportContact(wxCommandEvent& event);
     void OnListBoxEvent(wxCommandEvent& event);
@@ -41,6 +42,8 @@ private:
     wxSocketServer *m_server;
 
     wxListBox *m_listBox;
+
+    wxVector<DiscussionFrame*> discFrames;
 
     bool m_printedListBox;
 };
