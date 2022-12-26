@@ -13,15 +13,13 @@
 #include <wx/dir.h>
 #include <wx/stdpaths.h>
 
-#include <filesystem>
-
 #include "Main.hpp"
 #include "NouveauContact.hpp"
 
 #include "settings.hpp"
 
 MainFrame::MainFrame()
-    : wxFrame(NULL, IDs::Fenetre, "ipms", wxPoint(-1, -1), wxSize(WINDOW_WIDTH, WINDOW_HEIGHT)) {
+    : wxFrame(NULL, IDs::Fenetre, "ipms", wxPoint(-1, -1), wxSize(WINDOW_WIDTH, WINDOW_HEIGHT)), m_printedListBox(false) {
 
     //wxLogNull no_log; pour supprimer les logs localement, jusqu'à la fin du bloc
 
@@ -30,15 +28,12 @@ MainFrame::MainFrame()
 
     SetMinSize(wxSize(WINDOW_WIDTH, WINDOW_HEIGHT));
 
-    m_menuFile->Append(IDs::ListeContacts, "Lister les contacts\tCtrl-L");
-
     m_menuContact = new wxMenu;
     m_menuContact->Append(IDs::NouveauContact, "Ajouter\tCtrl-A");
     m_menuContact->Append(IDs::ImportContact, "Importer\tCtrl-I");
 
     m_menuSocket = new wxMenu;
     m_menuSocket->Append(IDs::ButConn, "Connecter");
-    m_menuSocket->Append(IDs::ButStart, "Demarrer srv");
 
     m_menuFile->AppendSubMenu(m_menuContact, "Contact");
     m_menuFile->AppendSeparator();
@@ -57,7 +52,6 @@ MainFrame::MainFrame()
     SetStatusText("Bienvenue dans ipms !");
 
     Bind(wxEVT_MENU, &MainFrame::AfficherMenuPrincipal, this, IDs::ListeContacts);
-    Bind(wxEVT_BUTTON, &MainFrame::AfficherMenuPrincipal, this, IDs::ListeContacts);
     Bind(wxEVT_MENU, &MainFrame::OnNouveauContact, this, IDs::NouveauContact);
     Bind(wxEVT_MENU, &MainFrame::OnImportContact, this, IDs::ImportContact);
     Bind(wxEVT_MENU, &MainFrame::OnExit, this, wxID_EXIT);
@@ -65,55 +59,55 @@ MainFrame::MainFrame()
     //socket stuff
     Bind(wxEVT_MENU, &MainFrame::Connect, this, IDs::ButConn);
     Bind(wxEVT_SOCKET, &MainFrame::OnSocketEvent, this, IDs::Socket);
-    Bind(wxEVT_MENU, &MainFrame::SrvStart, this, IDs::ButStart);
     Bind(wxEVT_SOCKET, &MainFrame::OnServerEvent, this, IDs::Server);
     Bind(wxEVT_SOCKET, &MainFrame::OnSocketEvent, this, IDs::SrvSock);
-
+    Bind(wxEVT_COMMAND_LISTBOX_DOUBLECLICKED, &MainFrame::OnListBoxEvent, this, IDs::ListBox);
+    Bind(wxEVT_SIZE, &MainFrame::OnResize, this, wxID_ANY);
+    SrvStart();
     AfficherMenuPrincipal();
 }
 void MainFrame::AfficherMenuPrincipal(wxCommandEvent& WXUNUSED(event)) {
     AfficherMenuPrincipal();
 }
 void MainFrame::AfficherMenuPrincipal() {
-    wxString dir_root = wxGetCwd() + wxString("/Contacts/");
-    wxArrayString files_result;
-    wxDir::GetAllFiles(dir_root,&files_result,wxT("*.ctc"));
-    for(size_t i=0; i<files_result.GetCount(); i++) {
-        wxPuts(files_result[i]);
-    }
-    //std::vector<wxButton> *buttons;
-    if(files_result.GetCount() < 1) {
+    CreateConfFolders();
+    wxStandardPathsBase &pathinfo=wxStandardPaths::Get();
+    wxDir dir(pathinfo.GetUserDataDir() + "/Contacts/");
+    m_infoNoCtc = new wxStaticText(this, -1, wxEmptyString);
+    if(!dir.HasFiles("*.ctc")) {
         m_sizerMenuPrincipal = new wxGridSizer(1, 1, 1, 1);
-        m_infoNoCtc = new wxStaticText(this, -1, L"Aucun contact pour l'instant, pour en ajouter allez dans\nFichier>Contact>Ajouter ou pressez Ctrl+A", wxDefaultPosition, wxDefaultSize);
+        m_infoNoCtc->SetLabel(L"Aucun contact pour l'instant, pour en ajouter allez dans\nFichier>Contact>Ajouter ou pressez Ctrl+A");
         Unbind(wxEVT_MENU, &MainFrame::AfficherMenuPrincipal, this, IDs::ListeContacts);
         m_sizerMenuPrincipal->Add(m_infoNoCtc);
     } else {
-        m_sizerMenuPrincipal = new wxGridSizer(3, files_result.GetCount(), 0, 0);
-        for(size_t i=0; i<files_result.GetCount(); i++) {
-            wxFileName filename(files_result[i]);
-            m_sizerMenuPrincipal->Add(new wxButton(this, -1, filename.GetName()), 0, 0, wxEXPAND);
-            //buttons->push_back(new wxButton(this, -1, filename.GetName()));
-            //pour mettre autant d'ids de boutons que je veux faire un tableau de la taille de files_result.GetCount()
-            m_sizerMenuPrincipal->AddSpacer(1);
+        wxArrayString arrayOfFiles;
+        wxDir::GetAllFiles(pathinfo.GetUserDataDir() + "/Contacts/", &arrayOfFiles, "*.ctc");
+        m_sizerMenuPrincipal = new wxGridSizer(3, arrayOfFiles.GetCount(), 0, 0);
+        m_listBox = new wxListBox(this, IDs::ListBox, wxDefaultPosition, wxSize(GetWinSize()[0], GetWinSize()[1]));
+        m_printedListBox = true;
+        m_sizerMenuPrincipal->Add(m_listBox, wxEXPAND);
+        wxString filename;
+        bool cont = dir.GetFirst(&filename);
+        while (cont) {
+            m_listBox->Append(filename);
+            cont = dir.GetNext(&filename);
         }
+        SetSizer(m_sizerMenuPrincipal);
     }
-    SetSizer(m_sizerMenuPrincipal);
 }
 void MainFrame::OnNouveauContact(wxCommandEvent& event) {
+    m_infoNoCtc->SetLabel("");
+    if(m_printedListBox) {
+        m_listBox->Clear();
+        m_printedListBox = false;
+    }
     wxStandardPathsBase &pathinfo=wxStandardPaths::Get();
     NouveauContactDialog dlgNouveauContact;
     if (dlgNouveauContact.ShowModal() == wxID_OK) {
         wxRegEx ipValide(wxString("^(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})$"));
         if(ipValide.Matches(dlgNouveauContact.GetIP())) {
             if(not(dlgNouveauContact.GetNom().IsEmpty() | dlgNouveauContact.GetPrenom().IsEmpty())) {
-                if(!wxDirExists(pathinfo.GetUserDataDir())) {
-                    wxPuts(wxString(L"Dossier de configuration inexistant. Creation à ") + pathinfo.GetUserDataDir());
-                    wxMkDir(pathinfo.GetUserDataDir(), 0777);
-                }
-                if(!wxDirExists(pathinfo.GetUserDataDir() + "/Contacts/")) {
-                    wxPuts(wxString(L"Dossier de contacts dans le dossier de configuration inexistant. Creation à ") + pathinfo.GetUserDataDir());
-                    wxMkDir(pathinfo.GetUserDataDir() + "/Contacts/", 0777);
-                }
+                CreateConfFolders();
                 wxString nomFichier(pathinfo.GetUserDataDir() + wxString("/Contacts/") + dlgNouveauContact.GetIP() + wxString(".ctc"));
                 //std::filesystem::path cwd = std::filesystem::current_path();
                 //wxString szUserName = wxGetTextFromUser("Please enter your name in the field below.", "Create a New User", wxEmptyString, this);
@@ -136,10 +130,15 @@ void MainFrame::OnNouveauContact(wxCommandEvent& event) {
             wxMessageBox("Veuillez renseigner une adresse IP valide", "Erreur", wxICON_INFORMATION);
         }
     }
+    AfficherMenuPrincipal();
 }
 
 void MainFrame::OnImportContact(wxCommandEvent& event) {
     m_infoNoCtc->SetLabel("");
+    if(m_printedListBox) {
+        m_listBox->Clear();
+        m_printedListBox = false;
+    }
     wxPuts("menu import contact affiche");
     wxString source = wxFileSelector("Ouvrir", wxGetUserHome(), "", "", "Fiches de contact (*.ctc)|*.ctc");
     if(!source.empty()) {
@@ -164,3 +163,35 @@ void MainFrame::OnAbout(wxCommandEvent& event) {
 void MainFrame::OnExit(wxCommandEvent& event) {
     Close(true);
 }
+
+void MainFrame::CreateConfFolders() {
+    wxStandardPathsBase &pathinfo=wxStandardPaths::Get();
+    if(!wxDirExists(pathinfo.GetUserDataDir())) {
+        wxPuts(wxString(L"Dossier de configuration inexistant. Creation à ") + pathinfo.GetUserDataDir());
+        wxMkDir(pathinfo.GetUserDataDir(), 0777);
+    }
+    if(!wxDirExists(pathinfo.GetUserDataDir() + "/Contacts/")) {
+        wxPuts(wxString(L"Dossier de contacts dans le dossier de configuration inexistant. Creation à ") + pathinfo.GetUserDataDir());
+        wxMkDir(pathinfo.GetUserDataDir() + "/Contacts/", 0777);
+    }
+}
+
+void MainFrame::OnListBoxEvent(wxCommandEvent& event) {
+    int index = event.GetSelection();
+    wxString filename = m_listBox->GetString(index);
+    wxMessageBox("You clicked on file " + filename);
+}
+
+wxArrayInt MainFrame::GetWinSize() {
+    int w;
+    int h;
+    DoGetClientSize(&w, &h);
+    wxArrayInt tab;
+    tab.Add(w);
+    tab.Add(h);
+    return tab;
+}
+
+void MainFrame::OnResize(wxSizeEvent& event) {
+    m_listBox->SetSize(GetWinSize()[0], GetWinSize()[1]);
+} 

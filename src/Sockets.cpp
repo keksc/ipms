@@ -11,14 +11,10 @@
 #include "settings.hpp"
 
 void MainFrame::Connect(wxCommandEvent& event) {
-    wxPuts("Connecting to the server...");
-
-    //Connecting to the server
     wxIPV4address adr;
-    adr.Hostname("localhost");
-    adr.Service(3000);
+    adr.Hostname("192.168.1.22");
+    adr.Service(3156);
 
-    //Create the socket
     wxSocketClient *Socket = new wxSocketClient();
 
     Socket->SetEventHandler(*this, IDs::Socket);
@@ -26,7 +22,7 @@ void MainFrame::Connect(wxCommandEvent& event) {
     Socket->Notify(TRUE);
 
     Socket->Connect(adr, false);
-    wxPuts("Connecting...");
+    wxPuts("Connexion au serveur...");
 
     return;
 }
@@ -50,7 +46,7 @@ void MainFrame::OnSocketEvent(wxSocketEvent &event) {
         char cstring[256];
         sprintf(cstring, "%c%c%c%c%c%c%c%c%c%c\n", buffer[0], buffer[1], buffer[2], buffer[3], buffer[4], buffer[5],
                 buffer[6], buffer[7], buffer[8], buffer[9]);
-        wxPuts(wxString("    Sent ") + cstring);
+        wxPuts(wxString("    Envoye ") + cstring);
 
         break;
     }
@@ -68,7 +64,7 @@ void MainFrame::OnSocketEvent(wxSocketEvent &event) {
     }
 
     case wxSOCKET_LOST: {
-        wxPuts("connexion perdue");
+        wxPuts("Connexion perdue");
         Sock->Destroy();
         break;
     }
@@ -79,9 +75,9 @@ void MainFrame::OnSocketEvent(wxSocketEvent &event) {
     }
 }
 
-void MainFrame::SrvStart(wxCommandEvent& event) {
+void MainFrame::SrvStart() {
     wxIPV4address adr;
-    adr.Service(3000);
+    adr.Service(3156);
 
     m_server = new wxSocketServer(adr);
 
@@ -91,34 +87,34 @@ void MainFrame::SrvStart(wxCommandEvent& event) {
     m_server->Notify(true);
 
     if(!m_server->Ok()) {
-        wxPuts(wxT("Could not start server :(\n"));
+        wxMessageBox("Le serveur na pas pu demarrer\nAttendez un peu puis redemarrez ipms\n");
+
         return;
     }
 
-    wxPuts(wxT("Server started\n"));
+    wxPuts(wxT("Le serveur a demarre\n"));
 
     return;
 }
 void MainFrame::OnServerEvent(wxSocketEvent &event) {
     switch (event.GetSocketEvent()) {
     case wxSOCKET_CONNECTION: {
-        wxPuts("OnServerEvent : wxSOCKET_CONNECTION\n");
+        wxPuts("Connexion entrante\n");
 
         wxSocketBase *Sock = m_server->Accept(true);
 
         if (Sock == NULL) {
-            wxPuts("Failed to accept incoming connection\n");
+            wxPuts("Erreur: na pas pu accepter la connexion\n");
             return;
         }
 
-        wxPuts("    Accepted Connection\n");
+        wxPuts("    Connexion acceptee\n");
         Sock->SetEventHandler(*this, IDs::SrvSock);
         Sock->SetNotify(wxSOCKET_CONNECTION_FLAG | wxSOCKET_INPUT_FLAG | wxSOCKET_OUTPUT_FLAG | wxSOCKET_LOST_FLAG);
         Sock->Notify(true);
         break;
     }
     default: {
-        wxPuts("OnServerEvent : unknown event\n");
         break;
     }
     }

@@ -16,12 +16,16 @@ private:
     void OnExit(wxCommandEvent& event);
     void OnAbout(wxCommandEvent& event);
     void OnImportContact(wxCommandEvent& event);
+    void OnListBoxEvent(wxCommandEvent& event);
     void AfficherMenuPrincipal(wxCommandEvent& event);
+    void OnResize(wxSizeEvent& event);
     void AfficherMenuPrincipal();
+    void CreateConfFolders();
+    wxArrayInt GetWinSize();
 
     void Connect(wxCommandEvent& event);
     void OnSocketEvent(wxSocketEvent &event);
-    void SrvStart(wxCommandEvent& event);
+    void SrvStart();
     void OnServerEvent(wxSocketEvent &event);
 
     wxMenu *m_menuFile;
@@ -35,6 +39,10 @@ private:
     wxStaticText *m_infoNoCtc;
 
     wxSocketServer *m_server;
+
+    wxListBox *m_listBox;
+
+    bool m_printedListBox;
 };
 
 #endif // MAIN_HPP_INCLUDED

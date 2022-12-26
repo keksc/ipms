@@ -18,6 +18,7 @@ enum IDs {
     Server = 9,
     ButStart = 10,
     SrvSock = 11,
-    SrvDesc = 12
+    SrvDesc = 12,
+    ListBox = 13
 };
 #endif // SETTINGS_HPP_INCLUDED

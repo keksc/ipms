@@ -3,7 +3,7 @@ WXFLAGS = $(shell wx-config --cxxflags)
 WXLIBS = $(shell wx-config --libs)
 
 EXE = ipms.out
-SRCS = App.cpp Main.cpp NouveauContact.cpp
+SRCS = App.cpp Main.cpp NouveauContact.cpp Sockets.cpp
 OBJS = $(SRCS:.cpp=.o)
 #
 # Debug build settings
@@ -11,7 +11,7 @@ OBJS = $(SRCS:.cpp=.o)
 DBGDIR = debug
 DBGEXE = $(DBGDIR)/$(EXE)
 DBGOBJS = $(addprefix $(DBGDIR)/, $(OBJS))
-DBGCFLAGS = -g -O0 -DDEBUG -Wall -Werror#-Werror fait les warnings devenir des erreurs
+DBGCFLAGS = -g -O0 -DDEBUG -Wall #-Werror fait les warnings devenir des erreurs
 
 #
 # Release build settings
