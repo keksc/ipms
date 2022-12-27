@@ -1,8 +1,12 @@
 # ipms
+
+#### Une application pour envoyer des messages à des adresses ip
+
 ### Récupérer l'exécutable:
-Une application pour envoyer des messages à des adresses ip
 
 Alpha dans [le dossier release](https://github.com/EuropaFantasy/ipms/tree/main/release), c'est un exécutable linux
+
+### Commentaires
 
 Pour l'instant c'est plus un éditeur de fichiers qu'un envoyeur de pépites testé et fonctionnel sur ubuntu, un peu de debug si vous ouvrez en console
 
