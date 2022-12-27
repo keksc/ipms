@@ -1,4 +1,5 @@
 # ipms
+##Récupérer l'exécutable:
 Une application pour envoyer des messages à des adresses ip
 
 Alpha dans [le dossier release](https://github.com/EuropaFantasy/ipms/tree/main/release), c'est un exécutable linux
