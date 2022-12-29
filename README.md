@@ -18,4 +18,12 @@ Si vous voulez signaler des bugs c'est dans [ce serveur discord](https://discord
 
 #### Sous linux
 
-Installer `gcc`
+Installer le compilateur `gcc` avec:
+
+`sudo apt install gcc`
+
+Télécharger les sources de la librairie wxwidgets sur wxwidgets.org/downloads puis les décompresser
+
+Ouvrir un terminal et aller à la racine du dossier contenant la source avec `cd`
+
+Exécuter avec si vous voulez utiliser plus de threads l'argument `-jnbredethreads` `make`
