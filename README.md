@@ -24,6 +24,18 @@ Installer le compilateur `gcc` avec:
 
 Télécharger les sources de la librairie wxwidgets sur wxwidgets.org/downloads puis les décompresser
 
-Ouvrir un terminal et aller à la racine du dossier contenant la source avec `cd`
+Télécharger ipms en dossier `.zip` et le décompresser
 
-Exécuter avec si vous voulez utiliser plus de threads l'argument `-jnbredethreads` `make`
+Ouvrir un terminal et naviguer jusqu'à la racine du dossier contenant la source avec `cd`
+
+Exécuter `./configure --disable-shared --with-gtk=3`
+
+Exécuter avec si vous voulez utiliser plus de threads l'argument `-jnbredethreads` `make` puis attendre la fin de la compilation
+
+Exécuter `make install`
+
+Naviguer jusqu'à la racine du dossier d'ipms avec `cd`
+
+Exécuter `make release`
+
+L'exécutable sera dans le sous dossier `release`! 
