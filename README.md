@@ -16,7 +16,7 @@ Si vous voulez signaler des bugs c'est dans [ce serveur discord](https://discord
 
 ### Compiler
 
-#### Sous linux
+#### Sous linux (testé kubuntu)
 
 Installer le compilateur `gcc` avec:
 
@@ -39,3 +39,7 @@ Naviguer jusqu'à la racine du dossier d'ipms avec `cd`
 Exécuter `make release`
 
 L'exécutable sera dans le sous dossier `release`! 
+
+#### Sous Windows
+
+Installer `msys` et le compilateur `gcc` sur [le site de msys](https://www.msys2.org/) (suivre les indications sur le site, utilisez bien le terminal `MSYS UCRT64` ou le compilateur ne sera pas trouvé
