@@ -30,7 +30,7 @@ Ouvrir un terminal et naviguer jusqu'à la racine du dossier contenant la source
 
 Exécuter `./configure --disable-shared --with-gtk=3`
 
-Exécuter avec si vous voulez utiliser plus de threads l'argument `-jnbredethreads` `make` puis attendre la fin de la compilation
+Exécuter `make` avec si vous voulez utiliser plus de threads l'argument `-jNbredethreads` puis attendre la fin de la compilation
 
 Exécuter `make install`
 
