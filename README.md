@@ -42,4 +42,4 @@ L'exécutable sera dans le sous dossier `release`!
 
 #### Sous Windows
 
-Installer `msys` et le compilateur `gcc` sur [le site de msys](https://www.msys2.org/) (suivre les indications sur le site, utilisez bien le terminal `MSYS UCRT64` ou le compilateur ne sera pas trouvé
+Je n'ai pas réussi à compiler les fichiers .lib de wxwidgets sous windows 
