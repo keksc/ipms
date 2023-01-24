@@ -22,9 +22,9 @@ Installer le compilateur `gcc` avec:
 
 `sudo apt install gcc`
 
-Télécharger les sources de la librairie wxwidgets sur wxwidgets.org/downloads puis les décompresser
+Télécharger les sources de la librairie wxwidgets sur [le site officiel](wxwidgets.org/downloads) puis les décompresser
 
-Télécharger ipms en dossier `.zip` et le décompresser
+Télécharger ipms en dossier `.zip`, ou `.7z` si vous avez un utilitaire pour ouvrir les archives et le décompresser
 
 Ouvrir un terminal et naviguer jusqu'à la racine du dossier contenant la source avec `cd`
 
