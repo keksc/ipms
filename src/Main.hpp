@@ -4,14 +4,15 @@
 #include <wx/wx.h>
 #include <wx/file.h>
 #include <wx/socket.h>
+#include "wx/richtext/richtextctrl.h"
 
 #include "NouveauContact.hpp"
-#include "Discussion.hpp"
+class DiscussionFrame;
 
 class MainFrame : public wxFrame {
 public:
     MainFrame();
-
+    void Envoyer(wxRichTextCtrl *text, wxString ip);
 private:
     void OnNouveauContact(wxCommandEvent& event);
     void OnClose(wxCloseEvent& event);
@@ -19,24 +20,28 @@ private:
     void OnImportContact(wxCommandEvent& event);
     void OnListBoxEvent(wxCommandEvent& event);
     void AfficherMenuPrincipal(wxCommandEvent& event);
-    void OnResize(wxSizeEvent& event);
     void AfficherMenuPrincipal();
     void CreateConfFolders();
-    wxArrayInt GetWinSize();
+    void MessageRecu(wxString *buffer);
 
-    void Connect(wxCommandEvent& event);
-    void OnSocketEvent(wxSocketEvent &event);
+    void Connect();
+    void OnSocketEvent(wxSocketEvent& event);
     void SrvStart();
-    void OnServerEvent(wxSocketEvent &event);
+    void OnServerEvent(wxSocketEvent& event);
 
     wxMenu *m_menuFile;
     wxMenu *m_menuContact;
     wxMenu *m_menuHelp;
     wxMenuBar *m_menuBar;
+    wxString *myPublicAddr;
+    wxString *dataToSend;
+    wxString *ipToSend;
+
+    wxSocketClient *Socket;
 
     wxMenu *m_menuSocket;
 
-    wxGridSizer *m_sizerMenuPrincipal;
+    wxBoxSizer *m_sizerMenuPrincipal;
     wxStaticText *m_infoNoCtc;
 
     wxSocketServer *m_server;

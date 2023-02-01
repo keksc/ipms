@@ -5,22 +5,214 @@
 #endif
 
 #include <wx/regex.h>
+#include <wx/textfile.h>
+#include <wx/stdpaths.h>
+#include <wx/scrolwin.h>
 
 #include "Discussion.hpp"
+#include "Main.hpp"
 
 #include "settings.hpp"
 
-DiscussionFrame::DiscussionFrame(wxString titre)
-    : wxFrame(NULL, wxID_ANY, "", wxDefaultPosition, wxSize(WINDOW_WIDTH, WINDOW_HEIGHT)) {
+#include "bitmaps/copy.xpm"
+#include "bitmaps/cut.xpm"
+#include "bitmaps/paste.xpm"
+#include "bitmaps/undo.xpm"
+#include "bitmaps/redo.xpm"
+#include "bitmaps/bold.xpm"
+#include "bitmaps/italic.xpm"
+#include "bitmaps/underline.xpm"
+
+#include "bitmaps/alignleft.xpm"
+#include "bitmaps/alignright.xpm"
+#include "bitmaps/centre.xpm"
+#include "bitmaps/font.xpm"
+#include "bitmaps/indentless.xpm"
+#include "bitmaps/indentmore.xpm"
+
+#include "wx/richtext/richtextctrl.h"
+#include "wx/richtext/richtextformatdlg.h"
+
+DiscussionFrame::DiscussionFrame(wxString titre, wxString ip, MainFrame *mainframe)
+    : wxFrame(NULL, wxID_ANY, titre, wxDefaultPosition, wxSize(DISCWINDOW_WIDTH, DISCWINDOW_HEIGHT)), m_ip(ip), mainframe(mainframe) {
+    SetMinSize(wxSize(DISCWINDOW_WIDTH, DISCWINDOW_HEIGHT));
+    wxMenu* editMenu = new wxMenu;
+    editMenu->Append(wxID_UNDO, L"&Undo\tCtrl+Z");
+    editMenu->Append(wxID_REDO, L"&Redo\tCtrl+Y");
+    editMenu->AppendSeparator();
+    editMenu->Append(wxID_CUT, L"Cu&t\tCtrl+X");
+    editMenu->Append(wxID_COPY, L"&Copy\tCtrl+C");
+    editMenu->Append(wxID_PASTE, L"&Paste\tCtrl+V");
+
+    /*editMenu->AppendSeparator();
+    editMenu->Append(wxID_SELECTALL, _("Select A&ll\tCtrl+A"));
+    editMenu->AppendSeparator();
+    editMenu->Append(ID_SET_FONT_SCALE, _("Set &Text Scale..."));
+    editMenu->Append(ID_SET_DIMENSION_SCALE, _("Set &Dimension Scale..."));*/
+
+    wxMenuBar *menuBar = new wxMenuBar();
+    menuBar->Append(editMenu, L"&Editer");
+
+    SetMenuBar(menuBar);
+
+    //m_scrolledWindow = new wxScrolledWindow(this);
     m_sizer = new wxBoxSizer(wxVERTICAL);
-    m_titre = new wxTextCtrl(this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize);
-    m_message = new wxTextCtrl(this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxTE_MULTILINE|wxTE_AUTO_URL);
-    m_sizer->Add(m_titre);
-    m_sizer->Add(m_message);
+
+
+    m_richTextCtrl = new wxRichTextCtrl(this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxSize(200, 300), wxVSCROLL|wxHSCROLL|wxWANTS_CHARS|wxNO_BORDER);
+    m_richTextCtrl->SetMargins(10, 10);
+    m_toolBar = new wxToolBar(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxNO_BORDER|wxTB_FLAT|wxTB_NODIVIDER|wxTB_NOALIGN);
+    m_toolBar->AddTool(wxID_CUT, wxEmptyString, wxBitmap(cut_xpm), L"Copier");
+    m_toolBar->AddTool(wxID_COPY, wxEmptyString, wxBitmap(copy_xpm), L"Couper");
+    m_toolBar->AddTool(wxID_PASTE, wxEmptyString, wxBitmap(paste_xpm), L"Coller");
+    m_toolBar->AddSeparator();
+    m_toolBar->AddTool(wxID_UNDO, wxEmptyString, wxBitmap(undo_xpm), L"Annuler");
+    m_toolBar->AddTool(wxID_REDO, wxEmptyString, wxBitmap(redo_xpm), L"Refaire");
+    m_toolBar->AddSeparator();
+    m_toolBar->AddCheckTool(IDs::FormatBold, wxEmptyString, wxBitmap(bold_xpm), wxNullBitmap, _("Bold"));
+    m_toolBar->AddCheckTool(IDs::FormatItalic, wxEmptyString, wxBitmap(italic_xpm), wxNullBitmap, L"Italique");
+    m_toolBar->AddCheckTool(IDs::FormatUnderline, wxEmptyString, wxBitmap(underline_xpm), wxNullBitmap, L"Souligner");
+    m_toolBar->AddSeparator();
+    m_toolBar->AddCheckTool(IDs::FormatAlignLeft, wxEmptyString, wxBitmap(alignleft_xpm), wxNullBitmap, L"Aligner à gauche");
+    m_toolBar->AddCheckTool(IDs::FormatAlignCentre, wxEmptyString, wxBitmap(centre_xpm), wxNullBitmap, L"Aligner au centre");
+    m_toolBar->AddCheckTool(IDs::FormatAlignRight, wxEmptyString, wxBitmap(alignright_xpm), wxNullBitmap, L"Aligner à droite");
+    m_toolBar->AddSeparator();
+    m_toolBar->AddTool(IDs::FormatIndentLess, wxEmptyString, wxBitmap(indentless_xpm), L"Moins indenter");
+    m_toolBar->AddTool(IDs::FormatIndentMore, wxEmptyString, wxBitmap(indentmore_xpm), L"Plus indenter");
+    m_toolBar->AddSeparator();
+    m_toolBar->AddTool(IDs::FormatFont, wxEmptyString, wxBitmap(font_xpm), "Police");
+    m_toolBar->Realize();
+
+    wxFont font(wxFontInfo(12).Family(wxFONTFAMILY_ROMAN));
+
+    m_richTextCtrl->SetFont(font);
+
+    wxStandardPathsBase &pathinfo=wxStandardPaths::Get();
+    const wxString usrDataDir(pathinfo.GetUserDataDir());
+    wxString folder(usrDataDir + "/Messages/");
+    wxString path(folder + m_ip + ".msgs");
+    messageHistory = new wxArrayString();
+    wxTextFile file;
+    bool empty;
+    if(wxFile::Exists(path)) {
+        wxPuts(wxString("Ouverture de ") + path);
+        file.Open(path);
+        empty = false;
+    } else {
+        wxPuts(wxString("Creation de ") + path);
+        file.Create(path);
+        empty = true;
+    }
+    if(!empty) {
+        wxString line(file.GetFirstLine());
+        wxPuts(line);
+        m_sizer->Add(new wxStaticText(this, wxID_ANY, line));
+        while(!file.Eof()) {
+            line = file.GetNextLine();
+            if(!line.IsEmpty()) {
+                wxPuts(line);
+                m_sizer->Add(new wxStaticText(this, wxID_ANY, line));
+            }
+        }
+    } else {
+        wxPuts(wxString("Fichier vide"));
+    }
+    m_sizer->Add(m_toolBar, 0, wxEXPAND);
+    m_sizer->Add(m_richTextCtrl, 1, wxEXPAND);
+    m_sizer->Add(new wxButton(this, IDs::ButEnvoyer, L"Envoyer"));
+    //m_scrolledWindow->SetSizer(m_sizer);
+    //m_scrolledWindow->SetScrollRate(10, 10);
     SetSizer(m_sizer);
-    SetTitle(titre);
+
+    Bind(wxEVT_CLOSE_WINDOW, &DiscussionFrame::OnExit, this);
+    Bind(wxEVT_TOOL, &DiscussionFrame::OnBold, this, IDs::FormatBold);
+    Bind(wxEVT_TOOL, &DiscussionFrame::OnItalic, this, IDs::FormatItalic);
+    Bind(wxEVT_TOOL, &DiscussionFrame::OnUnderline, this, IDs::FormatUnderline);
+    Bind(wxEVT_TOOL, &DiscussionFrame::OnCut, this, wxID_CUT);
+    Bind(wxEVT_TOOL, &DiscussionFrame::OnCopy, this, wxID_COPY);
+    Bind(wxEVT_TOOL, &DiscussionFrame::OnPaste, this, wxID_PASTE);
+    Bind(wxEVT_TOOL, &DiscussionFrame::OnUndo, this, wxID_UNDO);
+    Bind(wxEVT_TOOL, &DiscussionFrame::OnRedo, this, wxID_REDO);
+    Bind(wxEVT_TOOL, &DiscussionFrame::OnFont, this, IDs::FormatFont);
+    Bind(wxEVT_BUTTON, &DiscussionFrame::Envoyer, this, IDs::ButEnvoyer);
 }
 
-void DiscussionFrame::OnExit(wxCommandEvent& event) {
-    Close(true);
+void DiscussionFrame::OnExit(wxCloseEvent& event) {
+    //m_richTextCtrl->Unbind(wxEVT_RICHTEXT_SELECTION_CHANGED, &DiscussionFrame::OnTextSelectionChanged, this);
+    Hide();
+}
+
+wxString DiscussionFrame::GetIP() {
+    return m_ip;
+}
+void DiscussionFrame::OnBold(wxCommandEvent& event) {
+    m_richTextCtrl->ApplyBoldToSelection();
+}
+void DiscussionFrame::OnItalic(wxCommandEvent& event) {
+    m_richTextCtrl->ApplyItalicToSelection();
+}
+
+void DiscussionFrame::OnUnderline(wxCommandEvent& event) {
+    m_richTextCtrl->ApplyUnderlineToSelection();
+}
+
+void DiscussionFrame::OnFont(wxCommandEvent& event) {
+    if(m_richTextCtrl->GetStringSelection().IsEmpty()) return;
+    wxRichTextRange range;
+    if (m_richTextCtrl->HasSelection())
+        range = m_richTextCtrl->GetSelectionRange();
+    else
+        range = wxRichTextRange(0, m_richTextCtrl->GetLastPosition()+1);
+
+    int pages = wxRICHTEXT_FORMAT_FONT;
+
+    wxRichTextFormattingDialog formatDlg(pages, this);
+    formatDlg.SetOptions(wxRichTextFormattingDialog::Option_AllowPixelFontSize);
+    formatDlg.GetStyle(m_richTextCtrl, range);
+
+    if (formatDlg.ShowModal() == wxID_OK) {
+        formatDlg.ApplyStyle(m_richTextCtrl, range, wxRICHTEXT_SETSTYLE_WITH_UNDO|wxRICHTEXT_SETSTYLE_OPTIMIZE|wxRICHTEXT_SETSTYLE_CHARACTERS_ONLY);
+    }
+}
+
+void DiscussionFrame::OnCut(wxCommandEvent& event) {
+    m_richTextCtrl->Cut();
+}
+
+void DiscussionFrame::OnCopy(wxCommandEvent& event) {
+    m_richTextCtrl->Copy();
+}
+
+void DiscussionFrame::OnPaste(wxCommandEvent& event) {
+    m_richTextCtrl->Paste();
+}
+
+void DiscussionFrame::OnUndo(wxCommandEvent& event) {
+    m_richTextCtrl->Undo();
+}
+void DiscussionFrame::OnRedo(wxCommandEvent& event) {
+    m_richTextCtrl->Redo();
+}
+
+void DiscussionFrame::Envoyer(wxCommandEvent& event) {
+    wxStandardPathsBase &pathinfo=wxStandardPaths::Get();
+    wxString filename(pathinfo.GetUserDataDir() + wxString("/Messages/") + m_ip + ".msgs");
+    /*wxFile file;
+    if(wxFile::Exists(filename)) {
+        wxPuts(wxString("Ouverture de ") + filename);
+        file.Open(filename);
+    } else {
+        wxPuts(wxString("Creation de ") + filename);
+        file.Create(filename, false, wxS_IRUSR | wxS_IWUSR | wxS_IRGRP | wxS_IWGRP | wxS_IROTH | wxS_IWOTH);
+    }
+    if(!file.IsOpened()) {
+        wxString val = m_richTextCtrl->GetValue() + "\n";
+        file.Write(val);
+        file.Close();
+    } else {
+        wxMessageBox(L"Erreur lors de l'écriture du fichier");
+    }*/
+    wxFile file(filename, wxFile::write_append);
+    file.Write(m_richTextCtrl->GetValue() + "\n");
+    mainframe->Envoyer(m_richTextCtrl, m_ip);
 }

@@ -10,12 +10,13 @@
 
 #include "settings.hpp"
 
-void MainFrame::Connect(wxCommandEvent& event) {
+void MainFrame::Connect() {
     wxIPV4address adr;
-    adr.Hostname("192.168.1.22");
-    adr.Service(3156);
+    adr.Hostname(ipToSend->c_str());
+    delete ipToSend;
+    adr.Service(PORT);
 
-    wxSocketClient *Socket = new wxSocketClient();
+    Socket = new wxSocketClient();
 
     Socket->SetEventHandler(*this, IDs::Socket);
     Socket->SetNotify(wxSOCKET_CONNECTION_FLAG | wxSOCKET_INPUT_FLAG | wxSOCKET_LOST_FLAG);
@@ -28,25 +29,14 @@ void MainFrame::Connect(wxCommandEvent& event) {
 }
 void MainFrame::OnSocketEvent(wxSocketEvent &event) {
     wxSocketBase *Sock = event.GetSocket();
-
-    char buffer[10];
+    char buffer[1024*8];
 
     switch(event.GetSocketEvent()) {
     case wxSOCKET_CONNECTION: {
         wxPuts("Connexion reussie");
-
-        char mychar = '0';
-
-        for (int i=0; i<10; ++i) {
-            buffer[i] = mychar++;
-        }
-
-        Sock->Write(buffer, sizeof(buffer));
-
-        char cstring[256];
-        sprintf(cstring, "%c%c%c%c%c%c%c%c%c%c\n", buffer[0], buffer[1], buffer[2], buffer[3], buffer[4], buffer[5],
-                buffer[6], buffer[7], buffer[8], buffer[9]);
-        wxPuts(wxString("    Envoye ") + cstring);
+        Sock->Write(dataToSend->c_str(), dataToSend->length());
+        wxPuts(wxString("    Envoye ") + *dataToSend);
+        delete dataToSend;
 
         break;
     }
@@ -54,12 +44,9 @@ void MainFrame::OnSocketEvent(wxSocketEvent &event) {
     case wxSOCKET_INPUT: {
         wxPuts("Donnees recues");
         Sock->Read(buffer, sizeof(buffer));
-
-        char cstring[256];
-        sprintf(cstring, "%c%c%c%c%c%c%c%c%c%c\n", buffer[0], buffer[1], buffer[2], buffer[3], buffer[4], buffer[5],
-                buffer[6], buffer[7], buffer[8], buffer[9]);
-        wxPuts(wxString("    recu ") + cstring);
-
+        wxPuts(wxString("    Recu ") + wxString(buffer));
+        wxString strBuf(buffer);
+        MessageRecu(&strBuf);
         break;
     }
 
@@ -77,7 +64,7 @@ void MainFrame::OnSocketEvent(wxSocketEvent &event) {
 
 void MainFrame::SrvStart() {
     wxIPV4address adr;
-    adr.Service(3156);
+    adr.Service(PORT);
 
     m_server = new wxSocketServer(adr);
 

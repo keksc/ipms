@@ -9,6 +9,8 @@
 #include <wx/regex.h>
 #include <wx/dir.h>
 #include <wx/stdpaths.h>
+#include "wx/richtext/richtextctrl.h"
+#include <wx/textfile.h>
 
 #include "Main.hpp"
 #include "NouveauContact.hpp"
@@ -16,12 +18,25 @@
 
 #include "settings.hpp"
 
+#include "res/icon.xpm"
+
 MainFrame::MainFrame()
     : wxFrame(NULL, wxID_ANY, WINDOW_NAME, wxDefaultPosition, wxSize(WINDOW_WIDTH, WINDOW_HEIGHT)), m_printedListBox(false) {
 
     //wxLogNull no_log; pour supprimer les logs localement, jusqu'à la fin du bloc
+    wxIPV4address remote;
+    remote.Hostname("www.google.com");
+    remote.Service(80);
 
-    SetIcon(wxIcon("res/icon.ico"));
+    wxIPV4address local;
+
+    wxSocketClient client;
+    if(client.Connect(remote)) client.GetLocal(local);
+
+    myPublicAddr = new wxString(local.IPAddress());
+    wxPuts(wxString("Votre adresse IP : ") + *myPublicAddr);
+
+    SetIcon(wxIcon(icon));
     m_menuFile = new wxMenu;
 
     SetMinSize(wxSize(WINDOW_WIDTH, WINDOW_HEIGHT));
@@ -30,20 +45,18 @@ MainFrame::MainFrame()
     m_menuContact->Append(IDs::NouveauContact, "Ajouter\tCtrl-A");
     m_menuContact->Append(IDs::ImportContact, "Importer\tCtrl-I");
 
-    m_menuSocket = new wxMenu;
-    m_menuSocket->Append(IDs::ButConn, "Connecter");
-
     m_menuFile->AppendSubMenu(m_menuContact, "Contact");
     m_menuFile->AppendSeparator();
+    m_menuFile->Append(IDs::Preferences, L"Préférences\tCtrl-T", L"Vos paramètres");
     m_menuFile->Append(wxID_EXIT, "Quitter\tCtrl-Q", "Quitter ce programme");
 
     m_menuHelp = new wxMenu;
-    m_menuHelp->Append(wxID_ABOUT);
+    m_menuHelp->Append(wxID_ABOUT, L"A propos");
+
 
     m_menuBar = new wxMenuBar;
     m_menuBar->Append(m_menuFile, "&Fichier");
     m_menuBar->Append(m_menuHelp, "&Aide");
-    m_menuBar->Append(m_menuSocket, "&Socket");
 
     SetMenuBar(m_menuBar);
     CreateStatusBar();
@@ -55,12 +68,12 @@ MainFrame::MainFrame()
     Bind(wxEVT_CLOSE_WINDOW, &MainFrame::OnClose, this);
     Bind(wxEVT_MENU, &MainFrame::OnAbout, this, wxID_ABOUT);
     //socket stuff
-    Bind(wxEVT_MENU, &MainFrame::Connect, this, IDs::ButConn);
     Bind(wxEVT_SOCKET, &MainFrame::OnSocketEvent, this, IDs::Socket);
     Bind(wxEVT_SOCKET, &MainFrame::OnServerEvent, this, IDs::Server);
     Bind(wxEVT_SOCKET, &MainFrame::OnSocketEvent, this, IDs::SrvSock);
     Bind(wxEVT_COMMAND_LISTBOX_DOUBLECLICKED, &MainFrame::OnListBoxEvent, this, IDs::ListBox);
-    Bind(wxEVT_SIZE, &MainFrame::OnResize, this, wxID_ANY);
+    m_sizerMenuPrincipal = new wxBoxSizer(wxHORIZONTAL);
+
     SrvStart();
     AfficherMenuPrincipal();
 }
@@ -68,29 +81,35 @@ void MainFrame::AfficherMenuPrincipal(wxCommandEvent& WXUNUSED(event)) {
     AfficherMenuPrincipal();
 }
 void MainFrame::AfficherMenuPrincipal() {
+    m_sizerMenuPrincipal->Clear();
     CreateConfFolders();
     wxStandardPathsBase &pathinfo=wxStandardPaths::Get();
-    wxDir dir(pathinfo.GetUserDataDir() + "/Contacts/");
-    m_infoNoCtc = new wxStaticText(this, -1, wxEmptyString);
+    wxString usrDataDir(pathinfo.GetUserDataDir());
+    wxDir dir(usrDataDir + "/Contacts/");
     if(!dir.HasFiles("*.ctc")) {
-        m_sizerMenuPrincipal = new wxGridSizer(1, 1, 1, 1);
+
+        m_infoNoCtc = new wxStaticText(this, -1, wxEmptyString);
         m_infoNoCtc->SetLabel(L"Aucun contact pour l'instant, pour en ajouter allez dans\nFichier>Contact>Ajouter ou pressez Ctrl+A");
         Unbind(wxEVT_MENU, &MainFrame::AfficherMenuPrincipal, this, IDs::ListeContacts);
         m_sizerMenuPrincipal->Add(m_infoNoCtc);
     } else {
-        wxArrayString arrayOfFiles;
-        wxDir::GetAllFiles(pathinfo.GetUserDataDir() + "/Contacts/", &arrayOfFiles, "*.ctc");
-        m_sizerMenuPrincipal = new wxGridSizer(3, arrayOfFiles.GetCount(), 0, 0);
-        m_listBox = new wxListBox(this, IDs::ListBox, wxDefaultPosition, wxSize(GetWinSize()[0], GetWinSize()[1]));
+
+        m_listBox = new wxListBox(this, IDs::ListBox/*, wxDefaultPosition, wxSize(GetWinSize()[0], GetWinSize()[1])*/);
         m_printedListBox = true;
-        m_sizerMenuPrincipal->Add(m_listBox, wxEXPAND);
+        wxFileName name;
         wxString filename;
+        wxTextFile file;
         bool cont = dir.GetFirst(&filename);
         while (cont) {
-            m_listBox->Append(filename);
+            name.Assign(usrDataDir + wxString("/Contacts/") + filename);
+            file.Open(usrDataDir + wxString("/Contacts/") + filename);
+            m_listBox->Append(file.GetFirstLine() + wxString(" ") + file.GetNextLine() + wxString("|") + name.GetName());
+            file.Close();
             cont = dir.GetNext(&filename);
         }
+        m_sizerMenuPrincipal->Add(m_listBox, 0, wxEXPAND);
         SetSizer(m_sizerMenuPrincipal);
+        m_sizerMenuPrincipal->FitInside(this);
     }
 }
 void MainFrame::OnNouveauContact(wxCommandEvent& event) {
@@ -103,7 +122,7 @@ void MainFrame::OnNouveauContact(wxCommandEvent& event) {
     NouveauContactDialog dlgNouveauContact;
     if (dlgNouveauContact.ShowModal() == wxID_OK) {
         wxRegEx ipValide(wxString("^(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})$"));
-        if(ipValide.Matches(dlgNouveauContact.GetIP())) {
+        if(ipValide.Matches(dlgNouveauContact.GetIP()) or dlgNouveauContact.GetIP() == "localhost") {
             if(not(dlgNouveauContact.GetNom().IsEmpty() | dlgNouveauContact.GetPrenom().IsEmpty())) {
                 CreateConfFolders();
                 wxString nomFichier(pathinfo.GetUserDataDir() + wxString("/Contacts/") + dlgNouveauContact.GetIP() + wxString(".ctc"));
@@ -114,6 +133,7 @@ void MainFrame::OnNouveauContact(wxCommandEvent& event) {
                     if(fichierNouveauContact.Create(nomFichier, false, wxS_IRUSR | wxS_IWUSR | wxS_IRGRP | wxS_IWGRP | wxS_IROTH | wxS_IWOTH)) {
                         fichierNouveauContact.Write(dlgNouveauContact.GetNom() + wxString("\n") + dlgNouveauContact.GetPrenom());
                         wxPuts(wxString("Fichier enregistre avec succes en tant que ") + nomFichier);
+                        fichierNouveauContact.Close();
                     } else {
                         wxPuts("erreur durant l ecriture du fichier");
                         wxMessageBox(L"erreur durant la création du fichier");
@@ -159,9 +179,8 @@ void MainFrame::OnAbout(wxCommandEvent& event) {
 }
 
 void MainFrame::OnClose(wxCloseEvent& event) {
-    for (auto& frame : discFrames)
-    {
-        frame->Close(true);
+    for (auto& frame : discFrames) {
+        frame->Destroy();
     }
     wxPuts("closed main frame");
     Destroy();
@@ -169,26 +188,28 @@ void MainFrame::OnClose(wxCloseEvent& event) {
 
 void MainFrame::CreateConfFolders() {
     wxStandardPathsBase &pathinfo=wxStandardPaths::Get();
-    if(!wxDirExists(pathinfo.GetUserDataDir())) {
-        wxPuts(wxString(L"Dossier de configuration inexistant. Creation à ") + pathinfo.GetUserDataDir());
-        wxMkDir(pathinfo.GetUserDataDir(), 777);
+    wxString usrDataDir(pathinfo.GetUserDataDir());
+    if(!wxDirExists(usrDataDir)) {
+        wxPuts(wxString(L"Dossier de configuration inexistant. Creation a ") + usrDataDir);
+        wxMkDir(usrDataDir, FILEPERMS);
     }
-    if(!wxDirExists(pathinfo.GetUserDataDir() + "/Contacts/")) {
-        wxPuts(wxString(L"Dossier de contacts dans le dossier de configuration inexistant. Creation à ") + pathinfo.GetUserDataDir());
-        wxMkDir(pathinfo.GetUserDataDir() + "/Contacts/", 777);
+    if(!wxDirExists(usrDataDir + "/Contacts/")) {
+        wxPuts(wxString(L"Dossier de contacts dans le dossier de configuration inexistant. Creation a ") + usrDataDir + "/Contacts/");
+        wxMkDir(usrDataDir + "/Contacts/", FILEPERMS);
+    }
+    if(!wxDirExists(usrDataDir + "/Messages/")) {
+        wxPuts(wxString(L"Dossier de messages dans le dossier de configuration inexistant. Creation a ") + usrDataDir + "/Messages/");
+        wxMkDir(usrDataDir + "/Messages/", FILEPERMS);
     }
 }
 
 void MainFrame::OnListBoxEvent(wxCommandEvent& event) {
-    wxString name = m_listBox->GetStringSelection();
-    discFrames.push_back(new DiscussionFrame(name));
-    // Get the selected file name
-    wxString fileName = m_listBox->GetStringSelection();
-
-    // Check if a frame already exists for the selected file name
-    DiscussionFrame* frame = nullptr;
+    wxString name = m_listBox->GetStringSelection().AfterFirst('|') + ".ctc";
+    wxPuts(wxString("Ouverture de ") + name);
+    // Dans votre classe dérivée de wxFrame
+    DiscussionFrame *frame = nullptr;
     for (auto& f : discFrames) {
-        if (f->GetTitle() == fileName) {
+        if (f->GetTitle() == name) {
             frame = f;
             break;
         }
@@ -196,7 +217,12 @@ void MainFrame::OnListBoxEvent(wxCommandEvent& event) {
 
     // If a frame does not exist, create one
     if (!frame) {
-        frame = new DiscussionFrame(m_listBox->GetStringSelection());
+        wxStandardPathsBase &pathinfo=wxStandardPaths::Get();
+        wxString usrDataDir(pathinfo.GetUserDataDir());
+        wxFileName filename(usrDataDir + wxString("/Contacts/") + name);
+        wxTextFile file(usrDataDir + wxString("/Contacts/") + name);
+        file.Open();
+        frame = new DiscussionFrame(file.GetFirstLine() + wxString(" ") + file.GetNextLine(), filename.GetName(), this);
         discFrames.push_back(frame);
     } else {
         frame->SetFocus();
@@ -206,16 +232,25 @@ void MainFrame::OnListBoxEvent(wxCommandEvent& event) {
     frame->Show(true);
 }
 
-wxArrayInt MainFrame::GetWinSize() {
+/*wxArrayInt MainFrame::GetWinSize() {
     int w;
     int h;
     DoGetClientSize(&w, &h);
-    wxArrayInt tab;
-    tab.Add(w);
-    tab.Add(h);
-    return tab;
+    wxArrayInt size;
+    size.Add(w);
+    size.Add(h);
+    return size;
+}*/
+
+void MainFrame::Envoyer(wxRichTextCtrl *text, wxString ip) {
+    dataToSend = new wxString(*myPublicAddr + wxString(L"^") + text->GetValue());
+    ipToSend = new wxString(ip);
+    Connect();
 }
 
-void MainFrame::OnResize(wxSizeEvent& event) {
-    m_listBox->SetSize(GetWinSize()[0], GetWinSize()[1]);
+void MainFrame::MessageRecu(wxString *buffer) {
+    wxString ip(buffer->BeforeFirst(L'^'));
+    wxString message(buffer->AfterFirst(L'^'));
+    wxPuts(ip);
+    wxPuts(message);
 }
