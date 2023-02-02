@@ -7,3 +7,4 @@ private:
 OnClose(wxCloseEvent& event)
 OnAbout(wxCommandEvent& event)
 };
+#endif // PROFIL_HPP_INCLUDED
