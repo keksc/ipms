@@ -44,6 +44,6 @@ L'exécutable sera dans le sous dossier `release`!
 
 Je n'ai pas réussi à compiler les fichiers .lib de wxwidgets sous windows 
 
-# En ce moment
+### En ce moment
 
 Bugfixes système de base fonctionnel bientôt transfert de la mise en forme
