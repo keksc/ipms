@@ -4,4 +4,6 @@ class Profil Frame : public wxframe {
 public:
 ProfilFrame() {
 private:
-	
+OnClose(wxCloseEvent& event)
+OnAbout(wxCommandEvent& event)
+};
