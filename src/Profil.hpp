@@ -1,6 +1,9 @@
 #ifndef PROFIL_HPP_INCLUDED
 #define PROFIL_HPP_INCLUDED
-class Profil Frame : public wxframe {
+
+#include <wx/wx.h>
+
+class ProfilFrame : public wxframe {
 public:
 ProfilFrame() {
 private:
