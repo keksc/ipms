@@ -34,7 +34,7 @@
 #include "wx/richtext/richtextformatdlg.h"
 
 DiscussionFrame::DiscussionFrame(wxString titre, wxString ip, MainFrame *mainframe)
-    : wxFrame(NULL, wxID_ANY, titre, wxDefaultPosition, wxSize(DISCWINDOW_WIDTH, DISCWINDOW_HEIGHT)), m_ip(ip), mainframe(mainframe) {
+    : wxFrame(NULL, wxID_ANY, titre, wxDefaultPosition, wxSize(DISCWINDOW_WIDTH, DISCWINDOW_HEIGHT)), mainframe(mainframe), m_ip(ip) {
     SetMinSize(wxSize(DISCWINDOW_WIDTH, DISCWINDOW_HEIGHT));
     wxMenu* editMenu = new wxMenu;
     editMenu->Append(wxID_UNDO, L"&Undo\tCtrl+Z");
@@ -117,6 +117,7 @@ DiscussionFrame::DiscussionFrame(wxString titre, wxString ip, MainFrame *mainfra
     } else {
         wxPuts(wxString("Fichier vide"));
     }
+    file.Close();
     m_sizer->Add(m_toolBar, 0, wxEXPAND);
     m_sizer->Add(m_richTextCtrl, 1, wxEXPAND);
     m_sizer->Add(new wxButton(this, IDs::ButEnvoyer, L"Envoyer"));
@@ -197,22 +198,32 @@ void DiscussionFrame::OnRedo(wxCommandEvent& event) {
 void DiscussionFrame::Envoyer(wxCommandEvent& event) {
     wxStandardPathsBase &pathinfo=wxStandardPaths::Get();
     wxString filename(pathinfo.GetUserDataDir() + wxString("/Messages/") + m_ip + ".msgs");
-    /*wxFile file;
+    wxFile *file;
     if(wxFile::Exists(filename)) {
-        wxPuts(wxString("Ouverture de ") + filename);
-        file.Open(filename);
+        file = new wxFile(filename, wxFile::write_append);
+        file->Write(m_richTextCtrl->GetValue() + "\n");
     } else {
-        wxPuts(wxString("Creation de ") + filename);
-        file.Create(filename, false, wxS_IRUSR | wxS_IWUSR | wxS_IRGRP | wxS_IWGRP | wxS_IROTH | wxS_IWOTH);
+        file = new wxFile(filename, wxFile::write);
+        file->Write(m_richTextCtrl->GetValue() + "\n");
     }
-    if(!file.IsOpened()) {
-        wxString val = m_richTextCtrl->GetValue() + "\n";
-        file.Write(val);
-        file.Close();
-    } else {
-        wxMessageBox(L"Erreur lors de l'écriture du fichier");
-    }*/
-    wxFile file(filename, wxFile::write_append);
-    file.Write(m_richTextCtrl->GetValue() + "\n");
+    file->Close();
+    m_sizer->Insert(m_sizer->GetItemCount() - 3, new wxStaticText(this, wxID_ANY, m_richTextCtrl->GetValue()));
+    Layout();
     mainframe->Envoyer(m_richTextCtrl, m_ip);
+}
+
+void DiscussionFrame::MessageRecu(wxString msg) {
+    wxStandardPathsBase &pathinfo=wxStandardPaths::Get();
+    wxString filename(pathinfo.GetUserDataDir() + wxString("/Messages/") + m_ip + ".msgs");
+    wxFile *file;
+    if(wxFile::Exists(filename)) {
+        file = new wxFile(filename, wxFile::write_append);
+        file->Write(msg + "\n");
+    } else {
+        file = new wxFile(filename, wxFile::write);
+        file->Write(msg + "\n");
+    }
+    file->Close();
+    m_sizer->Insert(m_sizer->GetItemCount() - 3, new wxStaticText(this, wxID_ANY, msg));
+    Layout();
 }

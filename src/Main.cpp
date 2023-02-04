@@ -87,13 +87,8 @@ void MainFrame::AfficherMenuPrincipal() {
     wxString usrDataDir(pathinfo.GetUserDataDir());
     wxDir dir(usrDataDir + "/Contacts/");
     if(!dir.HasFiles("*.ctc")) {
-
-        m_infoNoCtc = new wxStaticText(this, -1, wxEmptyString);
-        m_infoNoCtc->SetLabel(L"Aucun contact pour l'instant, pour en ajouter allez dans\nFichier>Contact>Ajouter ou pressez Ctrl+A");
-        Unbind(wxEVT_MENU, &MainFrame::AfficherMenuPrincipal, this, IDs::ListeContacts);
-        m_sizerMenuPrincipal->Add(m_infoNoCtc);
+        wxPuts(L"Aucun contact pour l'instant, pour en ajouter allez dans\nFichier>Contact>Ajouter ou pressez Ctrl+A");
     } else {
-
         m_listBox = new wxListBox(this, IDs::ListBox/*, wxDefaultPosition, wxSize(GetWinSize()[0], GetWinSize()[1])*/);
         m_printedListBox = true;
         wxFileName name;
@@ -110,10 +105,10 @@ void MainFrame::AfficherMenuPrincipal() {
         m_sizerMenuPrincipal->Add(m_listBox, 0, wxEXPAND);
         SetSizer(m_sizerMenuPrincipal);
         m_sizerMenuPrincipal->FitInside(this);
+        Layout();
     }
 }
 void MainFrame::OnNouveauContact(wxCommandEvent& event) {
-    m_infoNoCtc->SetLabel("");
     if(m_printedListBox) {
         m_listBox->Clear();
         m_printedListBox = false;
@@ -152,7 +147,6 @@ void MainFrame::OnNouveauContact(wxCommandEvent& event) {
 }
 
 void MainFrame::OnImportContact(wxCommandEvent& event) {
-    m_infoNoCtc->SetLabel("");
     if(m_printedListBox) {
         m_listBox->Clear();
         m_printedListBox = false;
@@ -218,9 +212,9 @@ void MainFrame::OnListBoxEvent(wxCommandEvent& event) {
     // If a frame does not exist, create one
     if (!frame) {
         wxStandardPathsBase &pathinfo=wxStandardPaths::Get();
-        wxString usrDataDir(pathinfo.GetUserDataDir());
-        wxFileName filename(usrDataDir + wxString("/Contacts/") + name);
-        wxTextFile file(usrDataDir + wxString("/Contacts/") + name);
+        wxString folder(pathinfo.GetUserDataDir() + "/Contacts/");
+        wxFileName filename(folder + name);
+        wxTextFile file(folder + name);
         file.Open();
         frame = new DiscussionFrame(file.GetFirstLine() + wxString(" ") + file.GetNextLine(), filename.GetName(), this);
         discFrames.push_back(frame);
@@ -251,6 +245,34 @@ void MainFrame::Envoyer(wxRichTextCtrl *text, wxString ip) {
 void MainFrame::MessageRecu(wxString *buffer) {
     wxString ip(buffer->BeforeFirst(L'^'));
     wxString message(buffer->AfterFirst(L'^'));
+    wxPuts(wxString("r"));
+    DiscussionFrame *frame = nullptr;
+    wxPuts(wxString("d"));
+    wxStandardPathsBase &pathinfo=wxStandardPaths::Get();
+    wxString folder(pathinfo.GetUserDataDir() + "/Messages/");
+    wxPuts(wxString("rf"));
+    wxFileName filename(folder + ip + ".msgs");
+    wxPuts(wxString("rd"));
+    wxTextFile file(folder + ip + ".msgs");
+    wxPuts(wxString("rs"));
+    file.Open();
+    wxPuts(wxString("rq"));//TODO : fix that, rq is printed then error
+    wxPuts(wxString("Opening ") + folder + ip + ".msgs");
+    wxString framename;
+    if (file.GetLineCount() >= 2) {
+        framename = file.GetFirstLine() + wxString(" ") + file.GetNextLine();
+    } else {
+        wxPuts(wxString("Not enough lines in file ") + folder + ip + ".msgs");
+    }
+    wxPuts(wxString("rz"));
+    wxPuts(framename);
     wxPuts(ip);
     wxPuts(message);
+    /*for (auto& f : discFrames) {
+        if (f->GetTitle() == framename) {
+            frame = f;
+            break;
+        }
+    }
+    frame->MessageRecu(*buffer);*/
 }

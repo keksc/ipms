@@ -34,7 +34,9 @@ void MainFrame::OnSocketEvent(wxSocketEvent &event) {
     switch(event.GetSocketEvent()) {
     case wxSOCKET_CONNECTION: {
         wxPuts("Connexion reussie");
-        Sock->Write(dataToSend->c_str(), dataToSend->length());
+        memcpy(buffer, dataToSend->c_str(), dataToSend->length());
+        buffer[dataToSend->length()] = '\0';
+        Sock->Write(buffer, sizeof(buffer));
         wxPuts(wxString("    Envoye ") + *dataToSend);
         delete dataToSend;
 
@@ -44,9 +46,8 @@ void MainFrame::OnSocketEvent(wxSocketEvent &event) {
     case wxSOCKET_INPUT: {
         wxPuts("Donnees recues");
         Sock->Read(buffer, sizeof(buffer));
-        wxPuts(wxString("    Recu ") + wxString(buffer));
-        wxString strBuf(buffer);
-        MessageRecu(&strBuf);
+        wxPuts(wxString("    Recu ") + buffer);
+        MessageRecu(new wxString(buffer));
         break;
     }
 

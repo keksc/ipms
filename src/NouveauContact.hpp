@@ -12,5 +12,9 @@ private:
     wxTextCtrl *nom;
     wxTextCtrl *prenom;
     wxTextCtrl *ip;
+
+    wxBoxSizer *sizer1;
+    wxBoxSizer *sizer2;
+    wxBoxSizer *Psizer;
 };
 #endif // NOUVEAUCONTACT_HPP_INCLUDED*/

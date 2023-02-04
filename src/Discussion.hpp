@@ -27,6 +27,7 @@ public:
     void OnRedo(wxCommandEvent& event);
     void OnFont(wxCommandEvent& event);
     void Envoyer(wxCommandEvent& event);
+    void MessageRecu(wxString msg);
 private:
     MainFrame *mainframe;
     wxArrayString *messageHistory;

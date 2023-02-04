@@ -3,11 +3,11 @@
 
 #include <wx/wx.h>
 
-class ProfilFrame : public wxframe {
+class ProfilFrame : public wxFrame {
 public:
-ProfilFrame() {
+    ProfilFrame();
 private:
-OnClose(wxCloseEvent& event)
-OnAbout(wxCommandEvent& event)
+    void OnClose(wxCloseEvent& event);
+    void OnAbout(wxCommandEvent& event);
 };
 #endif // PROFIL_HPP_INCLUDED

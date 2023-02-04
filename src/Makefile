@@ -3,7 +3,7 @@ WXFLAGS = $(shell wx-config --cxxflags)
 WXLIBS = $(shell wx-config --libs std,richtext)
 
 EXE = ipms.out
-SRCS = App.cpp Main.cpp NouveauContact.cpp Sockets.cpp Discussion.cpp Preferences.cpp Profil.cpp
+SRCS = App.cpp Main.cpp NouveauContact.cpp Sockets.cpp Discussion.cpp Preferences.cpp
 OBJS = $(SRCS:.cpp=.o)
 #
 # Debug build settings
