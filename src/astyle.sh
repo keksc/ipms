@@ -10,6 +10,8 @@ astyle Discussion.cpp -A2
 astyle Discussion.hpp -A2
 astyle Profil.hpp -A2
 astyle Profil.cpp -A2
+astyle Settings.cpp -A2
+astyle Settings.hpp -A2
 
 rm Main.cpp.orig
 rm Main.hpp.orig
@@ -22,3 +24,5 @@ rm Discussion.cpp.orig
 rm Discussion.hpp.orig
 rm Profil.cpp.orig
 rm Profil.hpp.orig
+rm Settings.cpp.orig
+rm Settings.hpp.orig

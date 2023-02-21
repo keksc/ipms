@@ -12,13 +12,13 @@
 
 #include <filesystem>
 
-#include "NouveauContact.hpp"
+#include "EditContact.hpp"
 
 #include "settings.hpp"
 
-NouveauContactDialog::NouveauContactDialog()
+EditContactDialog::EditContactDialog()
     : wxDialog(NULL, wxID_ANY, "Entrez les infos", wxDefaultPosition, wxSize(WINDOW_WIDTH, WINDOW_HEIGHT)) {
-    wxPuts(L"[" VRT L"-" RESET L"] Fenetre nouveau contact affichee");
+    wxPuts(L"[" VRT L"-" RESET L"] Fenetre editer contact affichee");
     nom = new wxTextCtrl(this, wxID_ANY);
     prenom = new wxTextCtrl(this, wxID_ANY);
     ip = new wxTextCtrl(this, wxID_ANY);
@@ -44,12 +44,12 @@ NouveauContactDialog::NouveauContactDialog()
 
     Center();
 }
-wxString NouveauContactDialog::GetNom() {
+wxString EditContactDialog::GetNom() {
     return nom->GetValue();
 }
-wxString NouveauContactDialog::GetPrenom() {
+wxString EditContactDialog::GetPrenom() {
     return prenom->GetValue();
 }
-wxString NouveauContactDialog::GetIP() {
+wxString EditContactDialog::GetIP() {
     return ip->GetValue();
 }

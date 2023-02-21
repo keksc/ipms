@@ -2,7 +2,7 @@
 #define DISCUSSION_HPP_INCLUDED
 
 #include <wx/wx.h>
-#include <wx/vector.h>
+
 class MainFrame;
 
 #include "wx/richtext/richtextctrl.h"
@@ -11,7 +11,6 @@ class DiscussionFrame : public wxFrame {
 public:
     wxString GetIP();
     void OnExit(wxCloseEvent& event);
-    // ctor(s)
     DiscussionFrame(wxString title, wxString ip, MainFrame *mainframe);
 
     wxArrayInt GetWinSize();
@@ -27,14 +26,14 @@ public:
     void OnRedo(wxCommandEvent& event);
     void OnFont(wxCommandEvent& event);
     void Envoyer(wxCommandEvent& event);
-    void MessageRecu(wxString msg);
+    void MessageRecu(wxString& msg);
 private:
     MainFrame *mainframe;
-    wxArrayString *messageHistory;
+    wxMenu* editMenu;
+    wxMenuBar *menuBar;
     wxBoxSizer *m_sizer;
     wxToolBar *m_toolBar;
     wxRichTextCtrl* m_richTextCtrl;
     wxString m_ip;
-    wxScrolledWindow* m_scrolledWindow;
 };
 #endif // DISCUSSION_HPP_INCLUDED

@@ -8,6 +8,7 @@
 
 #include "NouveauContact.hpp"
 class DiscussionFrame;
+class SettingsFrame;
 
 class MainFrame : public wxFrame {
 public:
@@ -19,7 +20,7 @@ private:
     void OnAbout(wxCommandEvent& event);
     void OnImportContact(wxCommandEvent& event);
     void OnListBoxEvent(wxCommandEvent& event);
-    void AfficherMenuPrincipal(wxCommandEvent& event);
+    void OnPreferences(wxCommandEvent& event);
     void AfficherMenuPrincipal();
     void CreateConfFolders();
     void MessageRecu(wxString *buffer);
@@ -51,6 +52,8 @@ private:
     wxVector<DiscussionFrame*> discFrames;
 
     bool m_printedListBox;
+
+    SettingsFrame *settingsFrame;
 };
 
 #endif // MAIN_HPP_INCLUDED

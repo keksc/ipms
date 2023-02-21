@@ -9,7 +9,6 @@
 #define DISCUSSION_WIDTH 300
 #define DISCUSSION_HEIGHT 250
 #define PORT 6529
-#define FILEPERMS 777
 
 enum IDs {
     NouveauContact = 1,
@@ -32,6 +31,20 @@ enum IDs {
     FormatIndentLess = 18,
     FormatIndentMore = 19,
     FormatFont = 20,
-    ButEnvoyer = 21
+    ButEnvoyer = 21,
+    SettingMaj = 22,
+    SettingCmd = 23,
+    SettingsValider = 24,
+    SettingSplashScreen = 25
 };
+
+#define RGE   "\x1B[31m"
+#define VRT   "\x1B[32m"
+#define JNE   "\x1B[33m"
+#define BLU   "\x1B[34m"
+#define MAG   "\x1B[35m"
+#define CYN   "\x1B[36m"
+#define BLC   "\x1B[37m"
+#define RESET "\x1B[0m"
+
 #endif // SETTINGS_HPP_INCLUDED

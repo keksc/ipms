@@ -5,23 +5,36 @@
 #endif
 
 #include <wx/snglinst.h>
+#include <wx/splash.h>
 
 #include "App.hpp"
 #include "Main.hpp"
 
+#include "res/icon.xpm"
+
 bool IpmsApp::OnInit() {
     m_checker = new wxSingleInstanceChecker();
     if(m_checker->IsAnotherRunning()) {
-        wxLogError("Une autre instance de ce programme est en cours d'execution, annulation.");
+        wxLogError(L"Une autre instance de ce programme est en cours d'execution, annulation.");
         delete m_checker;
         m_checker = nullptr;
 
         return false;
     }
-    MainFrame *frame = new MainFrame();
+    /*wxBitmap bitmap(icon);
+    if (bitmap.IsOk()) {
+        splash = new wxSplashScreen(bitmap,wxSPLASH_CENTRE_ON_SCREEN|wxSPLASH_TIMEOUT, 1000, NULL, -1,  wxDefaultPosition, wxDefaultSize, wxBORDER_SIMPLE|wxSTAY_ON_TOP);
+    }
+    for(int i=0; i<4; i++) {
+        wxYield();
+        wxMilliSleep(250);
+    }
+    splash->Close();*/
+    frame = new MainFrame();
     frame->Show(true);
     return true;
 }
+
 int IpmsApp::OnExit() {
     delete m_checker;
     return 0;

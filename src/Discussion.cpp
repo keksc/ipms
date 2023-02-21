@@ -7,7 +7,9 @@
 #include <wx/regex.h>
 #include <wx/textfile.h>
 #include <wx/stdpaths.h>
+#include <wx/statline.h>
 #include <wx/scrolwin.h>
+#include <wx/sstream.h>
 
 #include "Discussion.hpp"
 #include "Main.hpp"
@@ -32,11 +34,13 @@
 
 #include "wx/richtext/richtextctrl.h"
 #include "wx/richtext/richtextformatdlg.h"
+#include "wx/richtext/richtextxml.h"
 
 DiscussionFrame::DiscussionFrame(wxString titre, wxString ip, MainFrame *mainframe)
     : wxFrame(NULL, wxID_ANY, titre, wxDefaultPosition, wxSize(DISCWINDOW_WIDTH, DISCWINDOW_HEIGHT)), mainframe(mainframe), m_ip(ip) {
     SetMinSize(wxSize(DISCWINDOW_WIDTH, DISCWINDOW_HEIGHT));
-    wxMenu* editMenu = new wxMenu;
+
+    editMenu = new wxMenu;
     editMenu->Append(wxID_UNDO, L"&Undo\tCtrl+Z");
     editMenu->Append(wxID_REDO, L"&Redo\tCtrl+Y");
     editMenu->AppendSeparator();
@@ -50,17 +54,11 @@ DiscussionFrame::DiscussionFrame(wxString titre, wxString ip, MainFrame *mainfra
     editMenu->Append(ID_SET_FONT_SCALE, _("Set &Text Scale..."));
     editMenu->Append(ID_SET_DIMENSION_SCALE, _("Set &Dimension Scale..."));*/
 
-    wxMenuBar *menuBar = new wxMenuBar();
+    menuBar = new wxMenuBar();
     menuBar->Append(editMenu, L"&Editer");
 
     SetMenuBar(menuBar);
 
-    //m_scrolledWindow = new wxScrolledWindow(this);
-    m_sizer = new wxBoxSizer(wxVERTICAL);
-
-
-    m_richTextCtrl = new wxRichTextCtrl(this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxSize(200, 300), wxVSCROLL|wxHSCROLL|wxWANTS_CHARS|wxNO_BORDER);
-    m_richTextCtrl->SetMargins(10, 10);
     m_toolBar = new wxToolBar(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxNO_BORDER|wxTB_FLAT|wxTB_NODIVIDER|wxTB_NOALIGN);
     m_toolBar->AddTool(wxID_CUT, wxEmptyString, wxBitmap(cut_xpm), L"Copier");
     m_toolBar->AddTool(wxID_COPY, wxEmptyString, wxBitmap(copy_xpm), L"Couper");
@@ -84,45 +82,54 @@ DiscussionFrame::DiscussionFrame(wxString titre, wxString ip, MainFrame *mainfra
     m_toolBar->Realize();
 
     wxFont font(wxFontInfo(12).Family(wxFONTFAMILY_ROMAN));
-
+    m_richTextCtrl = new wxRichTextCtrl(this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxSize(200, 300), wxVSCROLL|wxHSCROLL|wxWANTS_CHARS|wxNO_BORDER);
+    m_richTextCtrl->SetMargins(10, 10);
     m_richTextCtrl->SetFont(font);
+
+    m_sizer = new wxBoxSizer(wxVERTICAL);
 
     wxStandardPathsBase &pathinfo=wxStandardPaths::Get();
     const wxString usrDataDir(pathinfo.GetUserDataDir());
     wxString folder(usrDataDir + "/Messages/");
     wxString path(folder + m_ip + ".msgs");
-    messageHistory = new wxArrayString();
     wxTextFile file;
     bool empty;
     if(wxFile::Exists(path)) {
-        wxPuts(wxString("Ouverture de ") + path);
+        wxPuts(wxString(L"[" VRT L"-" RESET L"] Ouverture de ") + path);
         file.Open(path);
         empty = false;
     } else {
-        wxPuts(wxString("Creation de ") + path);
+        wxPuts(wxString(L"[" VRT L"-" RESET L"] Creation de ") + path);
         file.Create(path);
         empty = true;
     }
+    wxRichTextCtrl *rline = nullptr;
     if(!empty) {
         wxString line(file.GetFirstLine());
-        wxPuts(line);
-        m_sizer->Add(new wxStaticText(this, wxID_ANY, line));
+        if(!line.IsEmpty()) wxPuts(wxString(L"[" JNE L"msg" RESET L"] ") + line);
+        rline = new wxRichTextCtrl(this, wxID_ANY, line, wxDefaultPosition, wxDefaultSize, wxRE_READONLY | wxRE_MULTILINE);
+        rline->EnableVerticalScrollbar(false);
+        rline->SetBackgroundColour(GetBackgroundColour());
+        m_sizer->Add(rline, 1, wxEXPAND);
+        //m_sizer->Add(new wxRichTextCtrl(this, wxID_ANY, line, wxDefaultPosition, wxDefaultSize, wxRE_READONLY | wxRE_MULTILINE));
+        //m_sizer->Add(new wxStaticText(this, wxID_ANY, line));
         while(!file.Eof()) {
             line = file.GetNextLine();
             if(!line.IsEmpty()) {
-                wxPuts(line);
-                m_sizer->Add(new wxStaticText(this, wxID_ANY, line));
+                wxPuts(wxString(L"[" JNE L"msg" RESET L"] ") + line);
+                rline = new wxRichTextCtrl(this, wxID_ANY, line, wxDefaultPosition, wxDefaultSize, wxRE_READONLY | wxRE_MULTILINE);
+                rline->EnableVerticalScrollbar(false);
+                rline->SetBackgroundColour(GetBackgroundColour());
+                m_sizer->Add(rline, 1, wxEXPAND);
             }
         }
     } else {
-        wxPuts(wxString("Fichier vide"));
+        wxPuts(wxString(L"[" VRT L"-" RESET L"] Aucun message pour l'instant"));
     }
     file.Close();
     m_sizer->Add(m_toolBar, 0, wxEXPAND);
     m_sizer->Add(m_richTextCtrl, 1, wxEXPAND);
     m_sizer->Add(new wxButton(this, IDs::ButEnvoyer, L"Envoyer"));
-    //m_scrolledWindow->SetSizer(m_sizer);
-    //m_scrolledWindow->SetScrollRate(10, 10);
     SetSizer(m_sizer);
 
     Bind(wxEVT_CLOSE_WINDOW, &DiscussionFrame::OnExit, this);
@@ -136,6 +143,9 @@ DiscussionFrame::DiscussionFrame(wxString titre, wxString ip, MainFrame *mainfra
     Bind(wxEVT_TOOL, &DiscussionFrame::OnRedo, this, wxID_REDO);
     Bind(wxEVT_TOOL, &DiscussionFrame::OnFont, this, IDs::FormatFont);
     Bind(wxEVT_BUTTON, &DiscussionFrame::Envoyer, this, IDs::ButEnvoyer);
+    m_richTextCtrl->SetValue("<span font='bold'>Item 1:</span> Description 1\n"
+                         "<span font='bold'>Item 2:</span> Description 2\n"
+                         "<span font='bold'>Item 3:</span> Description 3\n");
 }
 
 void DiscussionFrame::OnExit(wxCloseEvent& event) {
@@ -209,10 +219,17 @@ void DiscussionFrame::Envoyer(wxCommandEvent& event) {
     file->Close();
     m_sizer->Insert(m_sizer->GetItemCount() - 3, new wxStaticText(this, wxID_ANY, m_richTextCtrl->GetValue()));
     Layout();
+    wxStringOutputStream out_stream;
+    wxRichTextXMLHandler xml_handler;
+    xml_handler.ExportXML(out_stream, m_richTextCtrl->GetBuffer(), 0);
+
+// Get the serialized data as a wxString
+    wxString serialized_data = out_stream.GetString();
+    wxPuts(serialized_data);
     mainframe->Envoyer(m_richTextCtrl, m_ip);
 }
 
-void DiscussionFrame::MessageRecu(wxString msg) {
+void DiscussionFrame::MessageRecu(wxString& msg) {
     wxStandardPathsBase &pathinfo=wxStandardPaths::Get();
     wxString filename(pathinfo.GetUserDataDir() + wxString("/Messages/") + m_ip + ".msgs");
     wxFile *file;
@@ -224,6 +241,17 @@ void DiscussionFrame::MessageRecu(wxString msg) {
         file->Write(msg + "\n");
     }
     file->Close();
-    m_sizer->Insert(m_sizer->GetItemCount() - 3, new wxStaticText(this, wxID_ANY, msg));
+    m_sizer->Insert(m_sizer->GetItemCount() - 3, new wxStaticLine(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxLI_HORIZONTAL), 0, wxEXPAND);
+    m_sizer->Insert(m_sizer->GetItemCount() - 3, new wxStaticText(this, wxID_ANY, msg), 0, wxALIGN_RIGHT);
     Layout();
+}
+
+wxArrayInt DiscussionFrame::GetWinSize() {
+    int w;
+    int h;
+    DoGetClientSize(&w, &h);
+    wxArrayInt size;
+    size.Add(w);
+    size.Add(h);
+    return size;
 }

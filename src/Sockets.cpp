@@ -23,7 +23,7 @@ void MainFrame::Connect() {
     Socket->Notify(TRUE);
 
     Socket->Connect(adr, false);
-    wxPuts("Connexion au serveur...");
+    wxPuts(L"[" VRT L"-" RESET L"] Connexion au serveur...");
 
     return;
 }
@@ -33,26 +33,26 @@ void MainFrame::OnSocketEvent(wxSocketEvent &event) {
 
     switch(event.GetSocketEvent()) {
     case wxSOCKET_CONNECTION: {
-        wxPuts("Connexion reussie");
+        wxPuts(L"[" VRT L"-" RESET L"] Connexion reussie");
         memcpy(buffer, dataToSend->c_str(), dataToSend->length());
         buffer[dataToSend->length()] = '\0';
         Sock->Write(buffer, sizeof(buffer));
-        wxPuts(wxString("    Envoye ") + *dataToSend);
+        wxPuts(wxString(L"[" VRT L"-" RESET L"]    Envoye ") + *dataToSend);
         delete dataToSend;
 
         break;
     }
 
     case wxSOCKET_INPUT: {
-        wxPuts("Donnees recues");
+        wxPuts(L"[" VRT L"-" RESET L"] Donnees recues");
         Sock->Read(buffer, sizeof(buffer));
-        wxPuts(wxString("    Recu ") + buffer);
+        wxPuts(wxString(L"[" VRT L"-" RESET L"]    Recu ") + buffer);
         MessageRecu(new wxString(buffer));
         break;
     }
 
     case wxSOCKET_LOST: {
-        wxPuts("Connexion perdue");
+        wxPuts(L"[" RGE L"X" RESET L"] Connexion perdue");
         Sock->Destroy();
         break;
     }
@@ -75,28 +75,26 @@ void MainFrame::SrvStart() {
     m_server->Notify(true);
 
     if(!m_server->Ok()) {
-        wxMessageBox("Le serveur na pas pu demarrer\nAttendez un peu puis redemarrez ipms\n");
+        wxMessageBox(L"Le serveur na pas pu démarrer\nAttendez un peu puis redémarrez ipms");
 
         return;
     }
 
-    wxPuts(wxT("Le serveur a demarre\n"));
-
-    return;
+    wxPuts(L"[" VRT L"-" RESET L"] Le serveur a demarre");
 }
 void MainFrame::OnServerEvent(wxSocketEvent &event) {
     switch (event.GetSocketEvent()) {
     case wxSOCKET_CONNECTION: {
-        wxPuts("Connexion entrante\n");
+        wxPuts(L"[" VRT L"-" RESET L"] Connexion entrante");
 
         wxSocketBase *Sock = m_server->Accept(true);
 
         if (Sock == NULL) {
-            wxPuts("Erreur: na pas pu accepter la connexion\n");
+            wxPuts(L"[" RGE L"X" RESET L"] N'a pas pu accepter la connexion entrante");
             return;
         }
 
-        wxPuts("    Connexion acceptee\n");
+        wxPuts(L"[" VRT L"-" RESET L"]    Connexion acceptee\n");
         Sock->SetEventHandler(*this, IDs::SrvSock);
         Sock->SetNotify(wxSOCKET_CONNECTION_FLAG | wxSOCKET_INPUT_FLAG | wxSOCKET_OUTPUT_FLAG | wxSOCKET_LOST_FLAG);
         Sock->Notify(true);

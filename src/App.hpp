@@ -2,6 +2,8 @@
 
 #include <wx/snglinst.h>
 
+#include "Main.hpp"
+
 #ifndef APP_HPP_INCLUDED
 #define APP_HPP_INCLUDED
 
@@ -11,6 +13,8 @@ public:
     virtual int OnExit();
 private:
     wxSingleInstanceChecker* m_checker;
+    wxSplashScreen* splash;
+    MainFrame *frame;
 };
 
 wxIMPLEMENT_APP(IpmsApp);
