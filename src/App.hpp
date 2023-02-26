@@ -15,6 +15,9 @@ private:
     wxSingleInstanceChecker* m_checker;
     wxSplashScreen* splash;
     MainFrame *frame;
+    int m_checkUpdatesState = 0;
+    int m_checkDebugState = 0;
+    int m_checkIconState = 0;
 };
 
 wxIMPLEMENT_APP(IpmsApp);

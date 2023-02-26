@@ -34,9 +34,8 @@ void MainFrame::OnSocketEvent(wxSocketEvent &event) {
     switch(event.GetSocketEvent()) {
     case wxSOCKET_CONNECTION: {
         wxPuts(L"[" VRT L"-" RESET L"] Connexion reussie");
-        memcpy(buffer, dataToSend->c_str(), dataToSend->length());
-        buffer[dataToSend->length()] = '\0';
-        Sock->Write(buffer, sizeof(buffer));
+        wxCharBuffer buf = dataToSend->To8BitData();
+        Sock->Write(buf, buf.length());
         wxPuts(wxString(L"[" VRT L"-" RESET L"]    Envoye ") + *dataToSend);
         delete dataToSend;
 

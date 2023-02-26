@@ -74,7 +74,7 @@ MainFrame::MainFrame()
     Bind(wxEVT_SOCKET, &MainFrame::OnSocketEvent, this, IDs::SrvSock);
     Bind(wxEVT_COMMAND_LISTBOX_DOUBLECLICKED, &MainFrame::OnListBoxEvent, this, IDs::ListBox);
     m_sizerMenuPrincipal = new wxBoxSizer(wxHORIZONTAL);
-
+    settingsFrame = new SettingsFrame(this);
     SrvStart();
     AfficherMenuPrincipal();
 }
@@ -174,7 +174,7 @@ void MainFrame::OnClose(wxCloseEvent& event) {
     for (auto& frame : discFrames) {
         if(frame != nullptr) frame->Destroy();
     }
-    if(settingsFrame != nullptr) settingsFrame->Destroy();
+    settingsFrame->Destroy();
     wxPuts(L"[" VRT L"-" RESET L"] Fermeture de la fenetre principale");
     Destroy();
 }
@@ -184,15 +184,15 @@ void MainFrame::CreateConfFolders() {
     wxString usrDataDir(pathinfo.GetUserDataDir());
     if(!wxDirExists(usrDataDir)) {
         wxPuts(wxString(L"[" VRT L"-" RESET L"] Dossier de configuration inexistant. Creation a ") + usrDataDir);
-        wxMkDir(usrDataDir, 777);
+        wxDir::Make(usrDataDir);
     }
     if(!wxDirExists(usrDataDir + "/Contacts/")) {
         wxPuts(wxString(L"[" VRT L"-" RESET L"] Dossier de contacts inexistant. Creation a ") + usrDataDir + "/Contacts/");
-        wxMkDir(usrDataDir + "/Contacts/", 777);
+        wxDir::Make(usrDataDir + "/Contacts/");
     }
     if(!wxDirExists(usrDataDir + "/Messages/")) {
         wxPuts(wxString(L"[" VRT L"-" RESET L"] Dossier de messages inexistant. Creation a ") + usrDataDir + "/Messages/");
-        wxMkDir(usrDataDir + "/Messages/", 777);
+        wxDir::Make(usrDataDir + "/Messages/");
     }
 }
 
@@ -251,6 +251,8 @@ void MainFrame::MessageRecu(wxString *buffer) {
     wxTextFile file(path);
     if(!file.Exists()) {
         file.Create();
+        file.AddLine(L"Nouveau");
+        file.AddLine(L"Contact");
     } else {
         file.Open();
     }
@@ -277,6 +279,5 @@ void MainFrame::MessageRecu(wxString *buffer) {
 
 void MainFrame::OnPreferences(wxCommandEvent& event) {
     wxPuts(L"[" VRT L"-" RESET L"] Fenetre de preferences affichee");
-    settingsFrame = new SettingsFrame(this);
     settingsFrame->Show(true);
 }

@@ -10,19 +10,13 @@ public:
     SettingsFrame(MainFrame *mainframe);
 private:
     void OnClose(wxCloseEvent& event);
-    void OnValider(wxCommandEvent& event);
-    void OnSetMaj(wxCommandEvent& event);
-    void OnSetCmd(wxCommandEvent& event);
-    void OnSetSplashScreen(wxCommandEvent& event);
-    wxMenu* editMenu;
-    wxMenuBar *menuBar;
-    wxBoxSizer *sizer;
-    MainFrame *mainframe;
-    bool validated;
-    wxArrayInt settings;
-    wxArrayInt oldSettings;
-    wxCheckBox *maj;
-    wxCheckBox *cmd;
-    wxCheckBox *splash;
+    void OnValidate(wxCommandEvent& event);
+    wxCheckBox* m_checkUpdates;
+    wxCheckBox* m_checkDebug;
+    wxCheckBox* m_checkIcon;
+
+    int m_checkUpdatesState = 0;
+    int m_checkDebugState = 0;
+    int m_checkIconState = 0;
 };
 #endif // PROFIL_HPP_INCLUDED

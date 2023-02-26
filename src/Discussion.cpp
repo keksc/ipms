@@ -143,9 +143,6 @@ DiscussionFrame::DiscussionFrame(wxString titre, wxString ip, MainFrame *mainfra
     Bind(wxEVT_TOOL, &DiscussionFrame::OnRedo, this, wxID_REDO);
     Bind(wxEVT_TOOL, &DiscussionFrame::OnFont, this, IDs::FormatFont);
     Bind(wxEVT_BUTTON, &DiscussionFrame::Envoyer, this, IDs::ButEnvoyer);
-    m_richTextCtrl->SetValue("<span font='bold'>Item 1:</span> Description 1\n"
-                         "<span font='bold'>Item 2:</span> Description 2\n"
-                         "<span font='bold'>Item 3:</span> Description 3\n");
 }
 
 void DiscussionFrame::OnExit(wxCloseEvent& event) {
@@ -232,6 +229,16 @@ void DiscussionFrame::Envoyer(wxCommandEvent& event) {
 void DiscussionFrame::MessageRecu(wxString& msg) {
     wxStandardPathsBase &pathinfo=wxStandardPaths::Get();
     wxString filename(pathinfo.GetUserDataDir() + wxString("/Messages/") + m_ip + ".msgs");
+    const char* myChar = filename.mb_str(wxConvUTF8);
+
+// Make a copy of the C string
+    char* myCopy = strdup(myChar);
+
+// Do something with the copy...
+
+// Free the copy when no longer needed
+    free(myCopy);
+
     wxFile *file;
     if(wxFile::Exists(filename)) {
         file = new wxFile(filename, wxFile::write_append);
