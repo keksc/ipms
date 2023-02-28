@@ -42,8 +42,8 @@ L'exécutable sera dans le sous dossier `release`!
 
 #### Sous Windows
 
-Je n'ai pas réussi à compiler les fichiers .lib de wxwidgets sous windows 
+Un exécutable windows dans le dossier `release`, il dépend des dlls qui sont dans le dossier `windowsdlls` et qui doivent etre dans le meme dossier que l'exécutable (ou dans un dossier qui est dans la variable `path` (non testé))
 
 ### En ce moment
 
-Bugfixes système de base fonctionnel bientôt transfert de la mise en forme
+Presque fini
