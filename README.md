@@ -55,3 +55,4 @@ Executer `make release`, l'exécutable sera dans le dossier `release`. Il a nean
 ### En ce moment
 
 Éditeur de profils de cryptages
+Bientôt fini ;) le plus dur est fait
