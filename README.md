@@ -41,9 +41,17 @@ Exécuter `make release`
 L'exécutable sera dans le sous dossier `release`! 
 
 #### Sous Windows
+Installer `msys2`sur [le site officiel](https://msys2.org) (suivre les étapes dont celle sur l'installation de mingw sur le site).
 
-Un exécutable windows dans le dossier `release`, il dépend des dlls qui sont dans le dossier `windowsdlls` et qui doivent etre dans le meme dossier que l'exécutable (ou dans un dossier qui est dans la variable `path` (non testé))
+Dans l'invite de commandes de `msys`installer les libs wxWidgets (pour le moment version 3.2) avec `pacman -S mingw-w64-x86_64-wxwidgets3.2-msw`
+
+Ouvrir `msys2 UCRT64`
+
+Télécharger le code source, puis naviguer jusqu'au dossier src avec l'invite `UCRT64` (pour changer de lecteur naviguez jusqu'à la racine avec `cd ..` puis `cd nomDuLecteur(ex:c)`
+
+Executer `make release`, l'exécutable sera dans le dossier `release`. Il a neanmoins des dependances (dlls), elles se triuvent dans le dossier de libs de gcc dans le dossier de msys (je donnerai plus tard les noms mais elles sont sur github dans release/windowsdlls) et si vous voulez l'executer rapidement depuis la shell msys faites `cd release` puis `./ipms.out`. Si vous voulez l'executer a part avec les dlls il faudra renommer ipms.out en ipms.exe
+
 
 ### En ce moment
 
-Presque fini
+Éditeur de profils de cryptages
