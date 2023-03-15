@@ -49,7 +49,7 @@ Ouvrir `msys2 UCRT64`
 
 Télécharger le code source, puis naviguer jusqu'au dossier src avec l'invite `UCRT64` (pour changer de lecteur naviguez jusqu'à la racine avec `cd ..` puis `cd nomDuLecteur(ex:c)`
 
-Executer `make release`, l'exécutable sera dans le dossier `release`. Il a neanmoins des dependances (dlls), elles se triuvent dans le dossier de libs de gcc dans le dossier de msys (je donnerai plus tard les noms mais elles sont sur github dans release/windowsdlls) et si vous voulez l'executer rapidement depuis la shell msys faites `cd release` puis `./ipms.out`. Si vous voulez l'executer a part avec les dlls il faudra renommer ipms.out en ipms.exe
+Executer `make release`, l'exécutable sera dans le dossier `release`. Il a neanmoins des dependances (dlls), elles se triuvent dans le dossier de libs de gcc dans le dossier de msys (`libstdc++-6.dll`, `wxbase32u_gcc_custom.dll`, `wxbase32u_net_gcc_custom.dll`, `wxmsw32u_core_gcc_custom.dll` et `wxmsw32u_richtext_gcc_custom.dll`) et si vous voulez l'executer rapidement depuis la shell msys faites `cd release` puis `./ipms.out`. Si vous voulez l'executer a part avec les dlls il faudra renommer ipms.out en ipms.exe
 
 
 ### En ce moment
