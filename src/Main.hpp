@@ -6,7 +6,7 @@
 #include <wx/socket.h>
 #include "wx/richtext/richtextctrl.h"
 
-#include "NouveauContact.hpp"
+#include "Contact.hpp"
 class DiscussionFrame;
 class SettingsFrame;
 
@@ -16,13 +16,17 @@ public:
     void Envoyer(wxRichTextCtrl *text, wxString ip);
 private:
     void OnNouveauContact(wxCommandEvent& event);
+    void OnEditProfils(wxCommandEvent& event);
     void OnClose(wxCloseEvent& event);
     void OnAbout(wxCommandEvent& event);
     void OnImportContact(wxCommandEvent& event);
     void OnListBoxEvent(wxCommandEvent& event);
     void OnPreferences(wxCommandEvent& event);
+    void OnClicListBox(wxCommandEvent& event);
+    void AfficherMenuPrincipal(wxCommandEvent& event);
     void AfficherMenuPrincipal();
     void CreateConfFolders();
+    void ReloadDiscFrames();
     void MessageRecu(wxString *buffer);
 
     void Connect();

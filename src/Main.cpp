@@ -13,11 +13,12 @@
 #include <wx/textfile.h>
 
 #include "Main.hpp"
-#include "NouveauContact.hpp"
+#include "Contact.hpp"
+#include "Profils.hpp"
 #include "Discussion.hpp"
 #include "Settings.hpp"
 
-#include "settings.hpp"
+#include "prefs.hpp"
 
 #include "res/icon.xpm"
 
@@ -45,6 +46,7 @@ MainFrame::MainFrame()
     m_menuContact = new wxMenu;
     m_menuContact->Append(IDs::NouveauContact, L"Ajouter\tCtrl-A");
     m_menuContact->Append(IDs::ImportContact, L"Importer\tCtrl-I");
+    m_menuContact->Append(IDs::EditProfils, L"Editer les profils de cryptage\tCtrl-E");
 
     m_menuFile->AppendSubMenu(m_menuContact, L"Contact");
     m_menuFile->AppendSeparator();
@@ -65,6 +67,7 @@ MainFrame::MainFrame()
 
     Bind(wxEVT_MENU, &MainFrame::OnNouveauContact, this, IDs::NouveauContact);
     Bind(wxEVT_MENU, &MainFrame::OnImportContact, this, IDs::ImportContact);
+    Bind(wxEVT_MENU, &MainFrame::OnEditProfils, this, IDs::EditProfils);
     Bind(wxEVT_MENU, &MainFrame::OnPreferences, this, IDs::Preferences);
     Bind(wxEVT_CLOSE_WINDOW, &MainFrame::OnClose, this);
     Bind(wxEVT_MENU, &MainFrame::OnAbout, this, wxID_ABOUT);
@@ -72,64 +75,71 @@ MainFrame::MainFrame()
     Bind(wxEVT_SOCKET, &MainFrame::OnSocketEvent, this, IDs::Socket);
     Bind(wxEVT_SOCKET, &MainFrame::OnServerEvent, this, IDs::Server);
     Bind(wxEVT_SOCKET, &MainFrame::OnSocketEvent, this, IDs::SrvSock);
-    Bind(wxEVT_COMMAND_LISTBOX_DOUBLECLICKED, &MainFrame::OnListBoxEvent, this, IDs::ListBox);
+    Bind(wxEVT_COMMAND_LISTBOX_SELECTED, &MainFrame::OnListBoxEvent, this, IDs::ListBox);
+    Bind(wxEVT_COMMAND_LISTBOX_DOUBLECLICKED, &MainFrame::OnClicListBox, this, IDs::ListBox);
+    Bind(wxEVT_BUTTON, &MainFrame::AfficherMenuPrincipal, this, IDs::ButReload);
     m_sizerMenuPrincipal = new wxBoxSizer(wxHORIZONTAL);
     settingsFrame = new SettingsFrame(this);
     SrvStart();
     AfficherMenuPrincipal();
 }
-
+void MainFrame::AfficherMenuPrincipal(wxCommandEvent& event) {
+    AfficherMenuPrincipal();
+}
 void MainFrame::AfficherMenuPrincipal() {
     m_sizerMenuPrincipal->Clear();
+    ReloadDiscFrames();
     CreateConfFolders();
     wxStandardPathsBase &pathinfo=wxStandardPaths::Get();
     wxString usrDataDir(pathinfo.GetUserDataDir());
     wxDir dir(usrDataDir + "/Contacts/");
     if(!dir.HasFiles("*.ctc")) {
-        wxMessageBox(L"Aucun contact pour l'instant, pour en ajouter allez dans Fichier>Contact>Ajouter ou pressez Ctrl+A");
+        wxMessageBox(L"Aucun contact pour l'instant, pour en ajouter allez dans Fichier>Contact>Ajouter ou pressez Ctrl+A", L"Info", wxICON_INFORMATION);
     } else {
+        if(m_printedListBox) delete m_listBox;
         m_listBox = new wxListBox(this, IDs::ListBox/*, wxDefaultPosition, wxSize(GetWinSize()[0], GetWinSize()[1])*/);
         m_printedListBox = true;
         wxFileName name;
         wxString filename;
         wxTextFile file;
+        wxRegEx ipValide(wxString("^(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})$"));
         bool cont = dir.GetFirst(&filename);
         while (cont) {
             name.Assign(usrDataDir + wxString("/Contacts/") + filename);
-            file.Open(usrDataDir + wxString("/Contacts/") + filename);
-            m_listBox->Append(file.GetFirstLine() + wxString(" ") + file.GetNextLine() + wxString("|") + name.GetName());
-            file.Close();
+            if(ipValide.Matches(name.GetName()) or name.GetName() == "localhost") {
+                file.Open(usrDataDir + wxString("/Contacts/") + filename);
+                m_listBox->Append(file.GetFirstLine() + wxString(" ") + file.GetNextLine() + wxString("|") + name.GetName());
+                file.Close();
+            } else {
+                wxMessageBox(wxString(L"Un des fichiers n'a pas une adresse IP valide (il s'agit de ") + filename + ")", L"Attention", wxICON_WARNING);//TODO: PROPOSER DE LE SUPPR, aussi ya un core dump qd je lance app si un dossier est présent
+            }
             cont = dir.GetNext(&filename);
         }
         m_sizerMenuPrincipal->Add(m_listBox, 0, wxEXPAND);
+        m_sizerMenuPrincipal->Add(new wxButton(this, IDs::ButReload, L"Recharger"));
         SetSizer(m_sizerMenuPrincipal);
-        m_sizerMenuPrincipal->FitInside(this);
         Layout();
     }
 }
 void MainFrame::OnNouveauContact(wxCommandEvent& event) {
-    if(m_printedListBox) {
-        m_listBox->Clear();
-        m_printedListBox = false;
-    }
     wxStandardPathsBase &pathinfo=wxStandardPaths::Get();
-    NouveauContactDialog dlgNouveauContact;
-    if (dlgNouveauContact.ShowModal() == wxID_OK) {
+    ContactDialog dlg;
+    if (dlg.ShowModal() == wxID_OK) {
         wxRegEx ipValide(wxString("^(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})$"));
-        if(ipValide.Matches(dlgNouveauContact.GetIP()) or dlgNouveauContact.GetIP() == "localhost") {
-            if(not(dlgNouveauContact.GetNom().IsEmpty() | dlgNouveauContact.GetPrenom().IsEmpty())) {
+        if(ipValide.Matches(dlg.GetIP()) or dlg.GetIP() == "localhost") {
+            if(not(dlg.GetNom().IsEmpty() | dlg.GetPrenom().IsEmpty())) {
                 CreateConfFolders();
-                wxString nomFichier(pathinfo.GetUserDataDir() + wxString("/Contacts/") + dlgNouveauContact.GetIP() + wxString(".ctc"));
+                wxString nomFichier(pathinfo.GetUserDataDir() + wxString("/Contacts/") + dlg.GetIP() + wxString(".ctc"));
                 //std::filesystem::path cwd = std::filesystem::current_path();
                 //wxString szUserName = wxGetTextFromUser("Please enter your name in the field below.", "Create a New User", wxEmptyString, this);
                 wxFile fichierNouveauContact;
                 if(!wxFile::Exists(nomFichier)) {
                     if(fichierNouveauContact.Create(nomFichier, false, wxS_IRUSR | wxS_IWUSR | wxS_IRGRP | wxS_IWGRP | wxS_IROTH | wxS_IWOTH)) {
-                        fichierNouveauContact.Write(dlgNouveauContact.GetNom() + wxString("\n") + dlgNouveauContact.GetPrenom());
+                        fichierNouveauContact.Write(dlg.GetNom() + wxString("\n") + dlg.GetPrenom());
                         wxPuts(wxString(L"[" VRT L"-" RESET L"] Fichier enregistre avec succes en tant que ") + nomFichier);
                         fichierNouveauContact.Close();
                     } else {
-                        wxMessageBox(L"Erreur durant la création du fichier");
+                        wxMessageBox(L"Erreur durant la création du fichier", L"Erreur", wxICON_ERROR);
                     }
                 } else {
                     wxMessageBox(L"Ce contact existe déjà !", "Info", wxICON_INFORMATION);
@@ -198,8 +208,9 @@ void MainFrame::CreateConfFolders() {
 
 void MainFrame::OnListBoxEvent(wxCommandEvent& event) {
     wxString name = m_listBox->GetStringSelection().AfterFirst('|') + ".ctc";
-    wxPuts(wxString(L"[" VRT L"-" RESET L"] Ouverture de ") + name);
-
+    wxStandardPathsBase &pathinfo=wxStandardPaths::Get();
+    wxString path(pathinfo.GetUserDataDir() + wxString("/Contacts/") + name);
+    wxPuts(wxString(L"[" VRT L"-" RESET L"] Ouverture de ") + path);
     DiscussionFrame *frame = nullptr;
     for (auto& f : discFrames) {
         if (f->GetIP() + ".ctc" == name) {
@@ -210,10 +221,8 @@ void MainFrame::OnListBoxEvent(wxCommandEvent& event) {
 
     // If a frame does not exist, create one
     if (frame == nullptr) {
-        wxStandardPathsBase &pathinfo=wxStandardPaths::Get();
-        wxString folder(pathinfo.GetUserDataDir() + "/Contacts/");
-        wxFileName filename(folder + name);
-        wxTextFile file(folder + name);
+        wxFileName filename(path);
+        wxTextFile file(path);
         file.Open();
         frame = new DiscussionFrame(file.GetFirstLine() + wxString(" ") + file.GetNextLine(), filename.GetName(), this);
         discFrames.push_back(frame);
@@ -249,35 +258,134 @@ void MainFrame::MessageRecu(wxString *buffer) {
     wxString path(folder + ip + ".ctc");
     wxFileName filename(path);
     wxTextFile file(path);
-    if(!file.Exists()) {
+    wxString framename;
+    if(wxFile::Exists(path)) {
+        wxPuts(wxString(L"[" VRT L"-" RESET L"] Ouverture de ") + path);
+        file.Open();
+        if (file.GetLineCount() >= 2) {
+            framename = file.GetFirstLine() + wxString(L" ") + file.GetNextLine();
+        } else {
+            wxPuts(wxString(L"[" RGE L"X" RESET L"] Pas assez de lignes dans ") + path);
+            wxMessageBox(wxString(L"Pas assez de lignes dans le fichier de contacts ") + path + L", il doit y avoir au moins deux lignes (une avec le nom, une avec le prénom)", L"Erreur", wxICON_ERROR);
+            return;
+        }
+    } else {
+        wxPuts(wxString(L"[" VRT L"-" RESET L"] Creation de ") + path);
         file.Create();
         file.AddLine(L"Nouveau");
         file.AddLine(L"Contact");
-    } else {
-        file.Open();
-    }
-    wxPuts(wxString(L"[" VRT L"-" RESET L"] Ouverture de ") + path);
-    wxString framename;
-    if (file.GetLineCount() >= 2) {
-        framename = file.GetFirstLine() + wxString(" ") + file.GetNextLine();
-    } else {
-        wxPuts(wxString(L"[" RGE L"-" RESET L"] Pas assez de lignes dans ") + path); // TODO: handle error
+        file.Write();
+        AfficherMenuPrincipal();
+        framename = file.GetFirstLine() + wxString(L" ") + file.GetNextLine();
     }
     file.Close();
     wxPuts(wxString(L"[" JNE L"?" RESET L"] Nom de l'envoyeur : ") + framename);
     wxPuts(wxString(L"[" JNE L"?" RESET L"] Message : ") + message);
     wxPuts(wxString(L"[" JNE L"?" RESET L"] Adresse IP de l'envoyeur : ") + ip);
-    DiscussionFrame *frame = nullptr;
-    for (auto& f : discFrames) {
+    for(auto& f : discFrames) {
         if (f->GetTitle() == framename) {
-            frame = f;
+            f->Show(true);
+            f->MessageRecu(message);
             break;
         }
     }
-    frame->MessageRecu(message);
 }
 
 void MainFrame::OnPreferences(wxCommandEvent& event) {
     wxPuts(L"[" VRT L"-" RESET L"] Fenetre de preferences affichee");
     settingsFrame->Show(true);
+}
+
+void MainFrame::OnClicListBox(wxCommandEvent& event) {
+    wxString name = m_listBox->GetStringSelection().AfterFirst('|') + ".ctc";
+    wxStandardPathsBase &pathinfo=wxStandardPaths::Get();
+    wxString path(pathinfo.GetUserDataDir() + wxString(L"/Contacts/") + name);
+    if(!wxFile::Exists(path)) {
+        wxMessageBox(L"Le contact est inexistant (suppression du fichier durant l'exécution de l'application ?)", L"Erreur", wxICON_ERROR);
+        return;
+    }
+
+    wxPuts(wxString(L"[" VRT L"-" RESET L"] Edition de ") + path);
+
+    ContactDialog dlg;
+    if (dlg.ShowModal() == wxID_OK) {
+        wxRegEx ipValide(wxString("^(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})$"));
+        if(ipValide.Matches(dlg.GetIP()) or dlg.GetIP() == "localhost") {
+            if(not(dlg.GetNom().IsEmpty() | dlg.GetPrenom().IsEmpty())) {
+                CreateConfFolders();
+
+                //std::filesystem::path cwd = std::filesystem::current_path();
+                //wxString szUserName = wxGetTextFromUser("Please enter your name in the field below.", "Create a New User", wxEmptyString, this);
+                wxTextFile file(path);
+                wxString newpath(pathinfo.GetUserDataDir() + wxString(L"/Contacts/") + dlg.GetIP() + ".ctc");
+                if(!wxFile::Exists(newpath)) {
+                    if(file.Open()) {
+                        wxPuts(wxString(L"[" VRT L"-" RESET L"] Ouverture du fichier ") + path);
+                        file.Clear();
+                        file.AddLine(dlg.GetNom());
+                        file.AddLine(dlg.GetPrenom());
+                        file.Write();
+                        file.Close();
+                        wxRenameFile(path, newpath);
+                    } else {
+                        wxMessageBox(L"Erreur durant l'ouverture du fichier", L"Erreur", wxICON_ERROR);
+                    }
+                } else {
+                    wxMessageBox(L"Cette IP est déjà prise par un autre contact ! Réessayez avec une IP libre.", L"Impossible de changer l'adresse", wxICON_WARNING);
+                }
+            } else {
+                wxMessageBox(L"Veuillez renseigner les champs de nom et de prénom", "Erreur", wxICON_INFORMATION);
+            }
+        } else {
+            wxMessageBox("Veuillez renseigner une adresse IP valide", "Erreur", wxICON_INFORMATION);
+        }
+    }
+    AfficherMenuPrincipal();
+    // If a frame does not exist, create one
+    /*if (frame == nullptr) {
+        wxStandardPathsBase &pathinfo=wxStandardPaths::Get();
+        wxString folder(pathinfo.GetUserDataDir() + "/Contacts/");
+        wxFileName filename(folder + name);
+        wxTextFile file(folder + name);
+        file.Open();
+        frame = new DiscussionFrame(file.GetFirstLine() + wxString(" ") + file.GetNextLine(), filename.GetName(), this);
+        discFrames.push_back(frame);
+    } else {
+        frame->SetFocus();
+    }*/
+
+    // Show the frame
+    //frame->Show(true);
+}
+
+void MainFrame::ReloadDiscFrames() {
+    for(auto& frame : discFrames) {
+        frame->Destroy();
+    }
+    discFrames.clear();
+    wxStandardPathsBase &pathinfo=wxStandardPaths::Get();
+    wxString usrDataDir(pathinfo.GetUserDataDir());
+    wxDir dir(usrDataDir + "/Contacts/");
+    wxString filename;
+    wxFileName name;
+    wxTextFile file;
+    bool cont = dir.GetFirst(&filename);
+    while (cont) {
+        name.Assign(usrDataDir + wxString("/Contacts/") + filename);
+        file.Open(usrDataDir + wxString("/Contacts/") + filename);
+        discFrames.push_back(new DiscussionFrame(file.GetFirstLine() + wxString(" ") + file.GetNextLine(), name.GetName(), this));
+        file.Close();
+        cont = dir.GetNext(&filename);
+    }
+}
+
+void MainFrame::OnEditProfils(wxCommandEvent& event) {
+    ProfilsDialog dlg;
+    if (dlg.ShowModal() == wxID_OK) {
+        if(dlg.GetMode() == 0) {
+            wxPuts(L"Mode de cryptage");
+        } else {
+            wxPuts(L"Mode de cryptage xxx");
+        }
+    }
 }

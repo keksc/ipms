@@ -28,6 +28,7 @@ public:
     void Envoyer(wxCommandEvent& event);
     void MessageRecu(wxString& msg);
 private:
+    void OnShown(wxShowEvent& event);
     MainFrame *mainframe;
     wxMenu* editMenu;
     wxMenuBar *menuBar;

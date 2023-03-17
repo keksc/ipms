@@ -11,9 +11,11 @@ public:
 private:
     void OnClose(wxCloseEvent& event);
     void OnValidate(wxCommandEvent& event);
+    void OnReset(wxCommandEvent& event);
     wxCheckBox* m_checkUpdates;
     wxCheckBox* m_checkDebug;
     wxCheckBox* m_checkIcon;
+    wxButton* m_reset;
 
     int m_checkUpdatesState = 0;
     int m_checkDebugState = 0;

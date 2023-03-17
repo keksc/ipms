@@ -1,0 +1,5 @@
+Package: ipms
+Version: 0.2
+Architecture: amd64
+Maintainer: Europa_Fantasy
+Description: An app to send custom message to ipms using TCP/IP

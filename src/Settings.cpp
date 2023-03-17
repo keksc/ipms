@@ -6,7 +6,7 @@
 
 #include "Settings.hpp"
 
-#include "settings.hpp"
+#include "prefs.hpp"
 
 SettingsFrame::SettingsFrame(MainFrame* parent)
     : wxFrame(parent, wxID_ANY, "Settings") {
@@ -14,6 +14,7 @@ SettingsFrame::SettingsFrame(MainFrame* parent)
     m_checkUpdates = new wxCheckBox(this, wxID_ANY, L"Vérifier les mises à jour au démarrage");
     m_checkDebug = new wxCheckBox(this, wxID_ANY, L"Ouvrir une console de debug au démarrage");
     m_checkIcon = new wxCheckBox(this, wxID_ANY, L"Montrer l'icône d'ipms au démarrage");
+    m_reset = new wxButton(this, wxID_ANY, L"Réinitialiser tous les paramètres et supprimer les conversations et contacts");
 
     // Add a sizer to arrange the controls vertically
     auto sizer = new wxBoxSizer(wxVERTICAL);
@@ -43,6 +44,7 @@ SettingsFrame::SettingsFrame(MainFrame* parent)
 
     // Bind the button to the OnValidate method
     button->Bind(wxEVT_BUTTON, &SettingsFrame::OnValidate, this);
+    m_reset->Bind(wxEVT_BUTTON, &SettingsFrame::OnReset, this);
     Bind(wxEVT_CLOSE_WINDOW, &SettingsFrame::OnClose, this);
 }
 
@@ -77,4 +79,8 @@ void SettingsFrame::OnClose(wxCloseEvent& event) {
     m_checkIcon->SetValue(m_checkIconState);
     wxPuts(L"[" VRT L"-" RESET L"] Cachage de la fenetre de preferences");
     Hide();
+}
+
+void SettingsFrame::OnReset(wxCommandEvent& event) {
+    //TODO::afficher boite de dialoque qui demande confirmation + rendre le bay fonctionnel (faire un btn qui clear ttes les donnees, une sorte d'auto destruction avec une confirmation)
 }

@@ -12,7 +12,7 @@
 #include "App.hpp"
 #include "Main.hpp"
 
-#include "settings.hpp"
+#include "prefs.hpp"
 
 #include "res/icon.xpm"
 

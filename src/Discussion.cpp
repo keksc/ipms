@@ -14,7 +14,7 @@
 #include "Discussion.hpp"
 #include "Main.hpp"
 
-#include "settings.hpp"
+#include "prefs.hpp"
 
 #include "bitmaps/copy.xpm"
 #include "bitmaps/cut.xpm"
@@ -35,6 +35,7 @@
 #include "wx/richtext/richtextctrl.h"
 #include "wx/richtext/richtextformatdlg.h"
 #include "wx/richtext/richtextxml.h"
+#include <wx/xml/xml.h>
 
 DiscussionFrame::DiscussionFrame(wxString titre, wxString ip, MainFrame *mainframe)
     : wxFrame(NULL, wxID_ANY, titre, wxDefaultPosition, wxSize(DISCWINDOW_WIDTH, DISCWINDOW_HEIGHT)), mainframe(mainframe), m_ip(ip) {
@@ -103,24 +104,26 @@ DiscussionFrame::DiscussionFrame(wxString titre, wxString ip, MainFrame *mainfra
         file.Create(path);
         empty = true;
     }
-    wxRichTextCtrl *rline = nullptr;
+    //TODO: fix l'affichage des richtexts qui s'écrasent
+    //wxRichTextCtrl *rline = nullptr;
     if(!empty) {
         wxString line(file.GetFirstLine());
         if(!line.IsEmpty()) wxPuts(wxString(L"[" JNE L"msg" RESET L"] ") + line);
-        rline = new wxRichTextCtrl(this, wxID_ANY, line, wxDefaultPosition, wxDefaultSize, wxRE_READONLY | wxRE_MULTILINE);
+        /*rline = new wxRichTextCtrl(this, wxID_ANY, line, wxDefaultPosition, wxDefaultSize, wxRE_READONLY);
         rline->EnableVerticalScrollbar(false);
         rline->SetBackgroundColour(GetBackgroundColour());
-        m_sizer->Add(rline, 1, wxEXPAND);
-        //m_sizer->Add(new wxRichTextCtrl(this, wxID_ANY, line, wxDefaultPosition, wxDefaultSize, wxRE_READONLY | wxRE_MULTILINE));
-        //m_sizer->Add(new wxStaticText(this, wxID_ANY, line));
+        m_sizer->Add(rline, 1, wxEXPAND);*/
+        //wxRichTextParagraphLayoutBox rline;
+        m_sizer->Add(new wxStaticText(this, wxID_ANY, line));
         while(!file.Eof()) {
             line = file.GetNextLine();
             if(!line.IsEmpty()) {
                 wxPuts(wxString(L"[" JNE L"msg" RESET L"] ") + line);
-                rline = new wxRichTextCtrl(this, wxID_ANY, line, wxDefaultPosition, wxDefaultSize, wxRE_READONLY | wxRE_MULTILINE);
+                /*rline = new wxRichTextCtrl(this, wxID_ANY, line, wxDefaultPosition, wxDefaultSize, wxRE_READONLY);
                 rline->EnableVerticalScrollbar(false);
                 rline->SetBackgroundColour(GetBackgroundColour());
-                m_sizer->Add(rline, 1, wxEXPAND);
+                m_sizer->Add(rline, 1, wxEXPAND);*/
+                m_sizer->Add(new wxStaticText(this, wxID_ANY, line));
             }
         }
     } else {
@@ -143,6 +146,12 @@ DiscussionFrame::DiscussionFrame(wxString titre, wxString ip, MainFrame *mainfra
     Bind(wxEVT_TOOL, &DiscussionFrame::OnRedo, this, wxID_REDO);
     Bind(wxEVT_TOOL, &DiscussionFrame::OnFont, this, IDs::FormatFont);
     Bind(wxEVT_BUTTON, &DiscussionFrame::Envoyer, this, IDs::ButEnvoyer);
+    Bind(wxEVT_SHOW, &DiscussionFrame::OnShown, this);
+
+    wxXmlNode node(NULL, wxXML_TEXT_NODE, wxString(L"msg"), wxString(L"<paragraphlayout textcolor=\"#FCFCFC\" fontpointsize=\"12\" fontfamily=\"72\" fontstyle=\"90\" fontweight=\"400\" fontunderlined=\"0\" fontface=\"Serif\" alignment=\"1\" parspacingafter=\"10\" parspacingbefore=\"0\" linespacing=\"10\" margin-left=\"10,4098\" margin-right=\"10,4098\" margin-top=\"10,4098\" margin-bottom=\"10,4098\"><paragraph><text>zdddddddddddddd</text></paragraph></paragraphlayout>"));
+    wxRichTextXMLHandler handler;
+    wxRichTextBuffer& buffer = m_richTextCtrl->GetBuffer();
+    handler.ImportXML(&buffer, new wxRichTextBox(), &node);
 }
 
 void DiscussionFrame::OnExit(wxCloseEvent& event) {
@@ -248,9 +257,12 @@ void DiscussionFrame::MessageRecu(wxString& msg) {
         file->Write(msg + "\n");
     }
     file->Close();
-    m_sizer->Insert(m_sizer->GetItemCount() - 3, new wxStaticLine(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxLI_HORIZONTAL), 0, wxEXPAND);
-    m_sizer->Insert(m_sizer->GetItemCount() - 3, new wxStaticText(this, wxID_ANY, msg), 0, wxALIGN_RIGHT);
-    Layout();
+    m_sizer->Insert(m_sizer->GetItemCount() - 3, new wxStaticLine(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxLI_HORIZONTAL), 1, wxEXPAND);
+    m_sizer->Insert(m_sizer->GetItemCount() - 3, new wxStaticText(this, wxID_ANY, msg), 1, wxALIGN_RIGHT);
+    /*wxRichTextCtrl *rline = new wxRichTextCtrl(this, wxID_ANY, msg, wxDefaultPosition, wxDefaultSize, wxRE_READONLY);
+    rline->EnableVerticalScrollbar(false);
+    rline->SetBackgroundColour(GetBackgroundColour());
+    m_sizer->Insert(m_sizer->GetItemCount() - 3, rline, 1, wxALIGN_RIGHT);*/
 }
 
 wxArrayInt DiscussionFrame::GetWinSize() {
@@ -261,4 +273,9 @@ wxArrayInt DiscussionFrame::GetWinSize() {
     size.Add(w);
     size.Add(h);
     return size;
+}
+
+void DiscussionFrame::OnShown(wxShowEvent& event) {
+    Layout();
+    m_sizer->Layout();
 }

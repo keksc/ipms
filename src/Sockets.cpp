@@ -8,7 +8,7 @@
 
 #include "Main.hpp"
 
-#include "settings.hpp"
+#include "prefs.hpp"
 
 void MainFrame::Connect() {
     wxIPV4address adr;
@@ -34,8 +34,8 @@ void MainFrame::OnSocketEvent(wxSocketEvent &event) {
     switch(event.GetSocketEvent()) {
     case wxSOCKET_CONNECTION: {
         wxPuts(L"[" VRT L"-" RESET L"] Connexion reussie");
-        wxCharBuffer buf = dataToSend->To8BitData();
-        Sock->Write(buf, buf.length());
+        strncpy(buffer, (const char*)dataToSend->mb_str(wxConvUTF8), 1024*8);
+        Sock->Write(buffer, sizeof(buffer));
         wxPuts(wxString(L"[" VRT L"-" RESET L"]    Envoye ") + *dataToSend);
         delete dataToSend;
 
@@ -74,7 +74,7 @@ void MainFrame::SrvStart() {
     m_server->Notify(true);
 
     if(!m_server->Ok()) {
-        wxMessageBox(L"Le serveur na pas pu démarrer\nAttendez un peu puis redémarrez ipms");
+        wxMessageBox(L"Le serveur na pas pu démarrer\nAttendez un peu puis redémarrez ipms (Vous pouvez uniquement éditer et créer des contacts ainsi que lire les discussions)", L"Erreur", wxICON_ERROR);
 
         return;
     }

@@ -1,0 +1,2 @@
+dpkg-deb --build .
+sudo dpkg -i mypackage-1.0.deb
