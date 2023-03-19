@@ -22,6 +22,10 @@ Installer le compilateur `gcc` avec:
 
 `sudo apt install gcc`
 
+Installer la librairie `Crypto++` avec:
+
+`sudo apt install libcrypto++-dev` (vous pourrez la désinstaller à la fin de la compilation avec `sudo apt remove libcrypto++-dev`
+
 Télécharger les sources de la librairie wxwidgets sur [le site officiel](wxwidgets.org/downloads) puis les décompresser
 
 Télécharger ipms en dossier `.zip`, ou `.7z` si vous avez un utilitaire pour ouvrir les archives et le décompresser
